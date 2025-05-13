@@ -33,7 +33,7 @@ class RegisterController extends Controller
     {
         $request->validate([
             'mobile_number' => 'required|string|max:20|unique:users',
-            'role' => 'required|exists:roles,id',
+            // 'role' => 'required|exists:roles,id',
         ]);
 
         try {
@@ -48,7 +48,7 @@ class RegisterController extends Controller
             ]);
 
             DB::table('model_has_roles')->insert([
-                'role_id' => $request->input('role'),
+                'role_id' => 4,
                 'model_type' => 'App\Models\User',
                 'model_id' => $user->id
             ]);
