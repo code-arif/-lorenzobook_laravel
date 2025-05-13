@@ -33,10 +33,12 @@ class User extends Authenticatable implements JWTSubject
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'email',
+        'first_name',
+        'last_name',
+        'mobile_number',
         'password',
         'otp',
+        'cover',
         'otp_expires_at',
         'last_activity_at'
     ];
@@ -69,7 +71,7 @@ class User extends Authenticatable implements JWTSubject
         ];
     }
 
-    public function getAvatarAttribute($value): string | null
+    public function getCoverAttribute($value): string | null
     {
         if (filter_var($value, FILTER_VALIDATE_URL)) {
             return $value;

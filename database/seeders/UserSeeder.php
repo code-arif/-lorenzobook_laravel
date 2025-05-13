@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -34,25 +33,57 @@ class UserSeeder extends Seeder
             ]);
 
             DB::table('users')->insert([
-                ['id' => 1, 'name' => 'developer', 'email' => 'developer@developer.com', 'password' => Hash::make('12345678'), 'otp_verified_at' => now()],
-                ['id' => 2, 'name' => 'Admin', 'email' => 'admin@admin.com', 'password' => Hash::make('12345678'), 'otp_verified_at' => now()],
-                ['id' => 3, 'name' => 'Retailer', 'email' => 'retailer@retailer.com', 'password' => Hash::make('12345678'), 'otp_verified_at' => now()],
-                ['id' => 4, 'name' => 'Customer', 'email' => 'customer@customer.com', 'password' => Hash::make('12345678'), 'otp_verified_at' => now()]
+                [
+                    'id' => 1,
+                    'first_name' => 'Dev',
+                    'last_name' => 'Eloper',
+                    'mobile_number' => '1000000001',
+                    'password' => Hash::make('12345678'),
+                    'otp_verified_at' => now()
+                ],
+                [
+                    'id' => 2,
+                    'first_name' => 'Admin',
+                    'last_name' => 'User',
+                    'mobile_number' => '1000000002',
+                    'password' => Hash::make('12345678'),
+                    'otp_verified_at' => now()
+                ],
+                [
+                    'id' => 3,
+                    'first_name' => 'Retail',
+                    'last_name' => 'Seller',
+                    'mobile_number' => '1000000003',
+                    'password' => Hash::make('12345678'),
+                    'otp_verified_at' => now()
+                ],
+                [
+                    'id' => 4,
+                    'first_name' => 'Cus',
+                    'last_name' => 'Tomer',
+                    'mobile_number' => '1000000004',
+                    'password' => Hash::make('12345678'),
+                    'otp_verified_at' => now()
+                ]
             ]);
 
             DB::table('role_has_permissions')->insert([
+                // developer
                 ['permission_id' => 1, 'role_id' => 1],
                 ['permission_id' => 2, 'role_id' => 1],
                 ['permission_id' => 3, 'role_id' => 1],
                 ['permission_id' => 4, 'role_id' => 1],
+                // admin
                 ['permission_id' => 1, 'role_id' => 2],
                 ['permission_id' => 2, 'role_id' => 2],
                 ['permission_id' => 3, 'role_id' => 2],
                 ['permission_id' => 4, 'role_id' => 2],
+                // retailer
                 ['permission_id' => 5, 'role_id' => 3],
                 ['permission_id' => 6, 'role_id' => 3],
                 ['permission_id' => 7, 'role_id' => 3],
                 ['permission_id' => 8, 'role_id' => 3],
+                // customer
                 ['permission_id' => 5, 'role_id' => 4],
                 ['permission_id' => 6, 'role_id' => 4],
                 ['permission_id' => 7, 'role_id' => 4],
