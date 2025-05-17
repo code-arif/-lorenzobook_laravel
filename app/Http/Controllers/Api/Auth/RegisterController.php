@@ -54,7 +54,7 @@ class RegisterController extends Controller
             ]);
 
             // Send SMS OTP
-            // $twilio->sendOtp($user->mobile_number, $otp);
+            $twilio->sendOtp($user->mobile_number, $otp);
 
             // return response()->json([
             //     'status'  => true,
@@ -135,7 +135,7 @@ class RegisterController extends Controller
             $user->otp_expires_at = $otpExpiresAt;
             $user->save();
 
-            $twilio->sendOtp($user->mobile_number, $otp);
+            // $twilio->sendOtp($user->mobile_number, $otp);
 
             return Helper::jsonResponse(true, 'OTP resent successfully.', 200);
         } catch (Exception $e) {
