@@ -137,7 +137,7 @@ class RegisterController extends Controller
 
             // $twilio->sendOtp($user->mobile_number, $otp);
 
-            return Helper::jsonResponse(true, 'OTP resent successfully.', 200);
+            return Helper::jsonResponse(true, 'OTP resent successfully.', 200, $user);
         } catch (Exception $e) {
             return Helper::jsonErrorResponse($e->getMessage(), 500);
         }
