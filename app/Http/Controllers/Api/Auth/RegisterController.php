@@ -142,9 +142,9 @@ class RegisterController extends Controller
         try {
             $user = User::where('mobile_number', $request->input('mobile_number'))->first();
 
-            if ($user->otp_verified_at) {
-                return $this->error([], 'Phone number already verified.', 409);
-            }
+            // if ($user->otp_verified_at) {
+            //     return $this->error([], 'Phone number already verified.', 409);
+            // }
 
             $otp = rand(100000, 999999);
             $otpExpiresAt = Carbon::now()->addMinutes(10);
