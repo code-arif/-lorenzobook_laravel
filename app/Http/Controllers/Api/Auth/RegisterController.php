@@ -46,7 +46,17 @@ class RegisterController extends Controller
                     'otp_expires_at' => $otpExpiresAt,
                 ]);
 
-                return $this->success($user, 'Existing user. OTP sent to your phone number.');
+                $data = [
+                    'user_id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'cover' => $user->cover,
+                    'mobile_number' => $user->mobile_number,
+                    'otp' => $user->otp,
+                ];
+
+
+                return $this->success($data, 'Existing User, OTP sent to your phone number.');
             } else {
                 // New user - create and assign role
                 $user = User::create([
@@ -54,18 +64,23 @@ class RegisterController extends Controller
                     'otp' => $otp,
                     'otp_expires_at' => $otpExpiresAt,
                 ]);
-
-                DB::table('model_has_roles')->insert([
-                    'role_id' => 4,
-                    'model_type' => 'App\Models\User',
-                    'model_id' => $user->id,
-                ]);
             }
 
             // Send OTP via Twilio
             // $twilio->sendOtp($user->mobile_number, $otp);
 
-            return $this->success($user, 'New user, OTP sent to your phone number.');
+
+            $data = [
+                'user_id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'cover' => $user->cover,
+                'mobile_number' => $user->mobile_number,
+                'otp' => $user->otp,
+            ];
+
+
+            return $this->success($data, 'New User, OTP sent to your phone number.');
         } catch (Exception $e) {
             return $this->error([$e->getMessage()], 'Registration failed');
         }
