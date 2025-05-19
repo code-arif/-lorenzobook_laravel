@@ -32,42 +32,48 @@ class RegisterController extends Controller
     public function register(Request $request, TwilioService $twilio)
     {
         $request->validate([
-            'mobile_number' => 'required|string|max:20|unique:users',
-            // 'role' => 'required|exists:roles,id',
+            'mobile_number' => 'required|string|max:20',
         ]);
 
         try {
-
             $otp = rand(100000, 999999);
             $otpExpiresAt = Carbon::now()->addMinutes(10);
 
-            $user = User::create([
-                'mobile_number'     => $request->input('mobile_number'),
-                'otp'              => $otp,
-                'otp_expires_at'   => $otpExpiresAt,
+            $user = User::where('mobile_number', $request->mobile_number)->first();
+
+            if ($user) {
+                // User already exists, just update the OTP
+                $user->update([
+                    'otp' => $otp,
+                    'otp_expires_at' => $otpExpiresAt,
+                ]);
+            } else {
+                // Create new user and assign role
+                $user = User::create([
+                    'mobile_number'   => $request->input('mobile_number'),
+                    'otp'             => $otp,
+                    'otp_expires_at'  => $otpExpiresAt,
+                ]);
+
+                DB::table('model_has_roles')->insert([
+                    'role_id'    => 4, // default role
+                    'model_type' => 'App\Models\User',
+                    'model_id'   => $user->id
+                ]);
+            }
+
+            // Send SMS OTP (uncomment this when using real service)
+            // $twilio->sendOtp($user->mobile_number, $otp);
+
+            return Helper::jsonResponse(true, 'OTP sent to your phone number.', 200, [
+                'user_id' => $user->id,
+                'mobile_number' => $user->mobile_number,
             ]);
-
-            DB::table('model_has_roles')->insert([
-                'role_id' => 4,
-                'model_type' => 'App\Models\User',
-                'model_id' => $user->id
-            ]);
-
-            // Send SMS OTP
-            $twilio->sendOtp($user->mobile_number, $otp);
-
-            // return response()->json([
-            //     'status'  => true,
-            //     'message' => 'OTP sent to your phone number.',
-            //     'user_id' => $user->id,
-            // ]);
-
-            return Helper::jsonResponse(true, 'OTP sent to your phone number.', 200, $user);
-            
         } catch (Exception $e) {
             return Helper::jsonErrorResponse('Registration failed', 500, [$e->getMessage()]);
         }
     }
+
 
 
 
