@@ -5,30 +5,28 @@ namespace App\Http\Controllers\Api\Auth;
 use Exception;
 use Carbon\Carbon;
 use App\Models\User;
-use App\Mail\OtpMail;
-use App\Helpers\Helper;
 use Illuminate\Http\Request;
 use App\Services\TwilioService;
 use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use App\Events\RegistrationNotificationEvent;
-use App\Notifications\RegistrationNotification;
+use Illuminate\Support\Facades\Validator;
+use App\Traits\ApiResponse;
 
 class RegisterController extends Controller
 {
+    use ApiResponse;
+
     public $select;
 
     public function __construct()
     {
-        $this->select = ['id', 'first_name', 'last_name', '
-        mobile_number', 'otp', 'cover'];
+        $this->select = ['id', 'first_name', 'last_name', 'mobile_number', 'otp', 'cover'];
     }
 
+    /**
+     * Register or send OTP if user already exists
+     */
     public function register(Request $request, TwilioService $twilio)
     {
         $request->validate([
@@ -42,43 +40,40 @@ class RegisterController extends Controller
             $user = User::where('mobile_number', $request->mobile_number)->first();
 
             if ($user) {
-                // User already exists, just update the OTP
+                // Existing user - update OTP
                 $user->update([
                     'otp' => $otp,
                     'otp_expires_at' => $otpExpiresAt,
                 ]);
+
+                return $this->success($user, 'Existing user. OTP sent to your phone number.');
             } else {
-                // Create new user and assign role
+                // New user - create and assign role
                 $user = User::create([
-                    'mobile_number'   => $request->input('mobile_number'),
-                    'otp'             => $otp,
-                    'otp_expires_at'  => $otpExpiresAt,
+                    'mobile_number' => $request->input('mobile_number'),
+                    'otp' => $otp,
+                    'otp_expires_at' => $otpExpiresAt,
                 ]);
 
                 DB::table('model_has_roles')->insert([
-                    'role_id'    => 4, // default role
+                    'role_id' => 4,
                     'model_type' => 'App\Models\User',
-                    'model_id'   => $user->id
+                    'model_id' => $user->id,
                 ]);
             }
 
-            // Send SMS OTP (uncomment this when using real service)
+            // Send OTP via Twilio
             // $twilio->sendOtp($user->mobile_number, $otp);
 
-            return Helper::jsonResponse(true, 'OTP sent to your phone number.', 200, [
-                'user_id' => $user->id,
-                'mobile_number' => $user->mobile_number,
-            ]);
+            return $this->success($user, 'New user, OTP sent to your phone number.');
         } catch (Exception $e) {
-            return Helper::jsonErrorResponse('Registration failed', 500, [$e->getMessage()]);
+            return $this->error([$e->getMessage()], 'Registration failed');
         }
     }
 
-
-
-
-
-
+    /**
+     * Verify the phone number with OTP
+     */
     public function verifyPhoneOtp(Request $request)
     {
         $request->validate([
@@ -90,15 +85,15 @@ class RegisterController extends Controller
             $user = User::where('mobile_number', $request->mobile_number)->first();
 
             if ($user->otp_verified_at) {
-                return Helper::jsonErrorResponse('Phone number already verified.', 409);
+                return $this->error([], 'Phone number already verified.', 409);
             }
 
             if ($user->otp !== $request->otp) {
-                return Helper::jsonErrorResponse('Invalid OTP.', 422);
+                return $this->error([], 'Invalid OTP.', 422);
             }
 
             if (Carbon::parse($user->otp_expires_at)->isPast()) {
-                return Helper::jsonErrorResponse('OTP has expired.', 422);
+                return $this->error([], 'OTP has expired.', 422);
             }
 
             $user->otp_verified_at = now();
@@ -106,32 +101,34 @@ class RegisterController extends Controller
             $user->otp_expires_at = null;
             $user->save();
 
-            // Create JWT token
             $token = JWTAuth::fromUser($user);
-
-            // Append token to the user object (if you're returning as an array)
             $user->token = $token;
-
             $user->is_new_user = empty($user->first_name) || empty($user->last_name);
 
-            return Helper::jsonResponse(true, 'Phone verification successful.', 200, $user);
+            return $this->success($user, 'Phone verification successful.');
         } catch (Exception $e) {
-            return Helper::jsonErrorResponse($e->getMessage(), 500);
+            return $this->error([], $e->getMessage(), 500);
         }
     }
 
-
+    /**
+     * Resend OTP to existing user
+     */
     public function resendPhoneOtp(Request $request, TwilioService $twilio)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'mobile_number' => 'required|string|exists:users,mobile_number',
         ]);
+
+        if ($validator->fails()) {
+            return $this->error([], $validator->errors()->first(), 422);
+        }
 
         try {
             $user = User::where('mobile_number', $request->input('mobile_number'))->first();
 
             if ($user->otp_verified_at) {
-                return Helper::jsonErrorResponse('Phone number already verified.', 409);
+                return $this->error([], 'Phone number already verified.', 409);
             }
 
             $otp = rand(100000, 999999);
@@ -143,9 +140,9 @@ class RegisterController extends Controller
 
             // $twilio->sendOtp($user->mobile_number, $otp);
 
-            return Helper::jsonResponse(true, 'OTP resent successfully.', 200, $user);
+            return $this->success($user, 'OTP resent successfully.');
         } catch (Exception $e) {
-            return Helper::jsonErrorResponse($e->getMessage(), 500);
+            return $this->error([], $e->getMessage(), 500);
         }
     }
 }
