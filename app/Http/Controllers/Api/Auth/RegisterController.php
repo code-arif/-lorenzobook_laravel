@@ -104,7 +104,7 @@ class RegisterController extends Controller
             // }
 
             if ($user->otp !== $request->otp) {
-                return $this->error([], 'Invalid OTP.', 403);
+                return $this->error([], 'Invalid OTP.Please provide valid otp ', 403);
             }
 
             if (Carbon::parse($user->otp_expires_at)->isPast()) {
