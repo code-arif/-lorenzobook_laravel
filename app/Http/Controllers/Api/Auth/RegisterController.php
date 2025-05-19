@@ -99,16 +99,16 @@ class RegisterController extends Controller
         try {
             $user = User::where('mobile_number', $request->mobile_number)->first();
 
-            if ($user->otp_verified_at) {
-                return $this->error([], 'Phone number already verified.', 409);
-            }
+            // if ($user->otp_verified_at) {
+            //     return $this->error([], 'Phone number already verified.', 403);
+            // }
 
             if ($user->otp !== $request->otp) {
-                return $this->error([], 'Invalid OTP.', 422);
+                return $this->error([], 'Invalid OTP.', 403);
             }
 
             if (Carbon::parse($user->otp_expires_at)->isPast()) {
-                return $this->error([], 'OTP has expired.', 422);
+                return $this->error([], 'OTP has expired.', 403);
             }
 
             $user->otp_verified_at = now();
