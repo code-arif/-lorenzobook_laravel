@@ -45,6 +45,11 @@ class DashboardController extends Controller
             file_put_contents(public_path('transactions.json'), $formatted_data->toJson());
         }
 
-        return view('backend.layouts.dashboard');
+        $all_users = User::count();
+
+        return view('backend.layouts.dashboard', [
+            'all_users' => $all_users,
+            
+        ]);
     }
 }

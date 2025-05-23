@@ -18,7 +18,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\Frontend\SettingsController;
 use App\Http\Controllers\Api\Frontend\SocialLinksController;
 use App\Http\Controllers\Api\Frontend\SubscriberController;
-
+use App\Http\Controllers\Api\GroupController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -111,6 +111,26 @@ Route::middleware(['auth:api'])->controller(ChatController::class)->prefix('auth
     Route::get('/search', 'search');
     Route::get('/seen/all/{receiver_id}', 'seenAll');
     Route::get('/seen/single/{chat_id}', 'seenSingle');
+
+    
+});
+
+
+
+Route::middleware(['auth:api'])->controller(GroupController::class)->prefix('auth/group')->group(function () {
+   
+    Route::get('/list', 'list');
+    Route::post('/create', 'create');
+    Route::get('/show/{group_id}', 'show');
+    Route::post('/update/{group_id}', 'update');
+    Route::delete('/delete/{group_id}', 'destroy');
+    Route::post('/add/member/{group_id}', 'addMember');
+    Route::post('/remove/member/{group_id}', 'removeMember');
+    Route::post('/leave/member/{group_id}', 'leaveMember');
+    Route::post('/mute/member/{group_id}', 'muteMember');
+    Route::post('/unmute/member/{group_id}', 'unmuteMember');
+    Route::post('/ban/member/{group_id}', 'banMember');
+    Route::post('/unban/member/{group_id}', 'unbanMember');
 
     
 });

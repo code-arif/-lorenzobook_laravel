@@ -37,6 +37,7 @@ class UserSeeder extends Seeder
                     'id' => 1,
                     'first_name' => 'Dev',
                     'last_name' => 'Eloper',
+                    'email' => 'developer@developer.com',
                     'mobile_number' => '1000000001',
                     'password' => Hash::make('12345678'),
                     'otp_verified_at' => now()
@@ -46,6 +47,7 @@ class UserSeeder extends Seeder
                     'first_name' => 'Admin',
                     'last_name' => 'User',
                     'mobile_number' => '1000000002',
+                    'email' => 'admin@admin.com',
                     'password' => Hash::make('12345678'),
                     'otp_verified_at' => now()
                 ],
@@ -53,6 +55,7 @@ class UserSeeder extends Seeder
                     'id' => 3,
                     'first_name' => 'Retail',
                     'last_name' => 'Seller',
+                    'email' => 'seller@seller.com',
                     'mobile_number' => '1000000003',
                     'password' => Hash::make('12345678'),
                     'otp_verified_at' => now()
@@ -61,6 +64,7 @@ class UserSeeder extends Seeder
                     'id' => 4,
                     'first_name' => 'Cus',
                     'last_name' => 'Tomer',
+                    'email' => 'customer@customer.com',
                     'mobile_number' => '1000000004',
                     'password' => Hash::make('12345678'),
                     'otp_verified_at' => now()
