@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\Auth\UserController;
 use App\Http\Controllers\Api\Auth\SocialLoginController;
+use App\Http\Controllers\Api\ChannelManageController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\FirebaseTokenController;
 use App\Http\Controllers\Api\Frontend\categoryController;
@@ -31,7 +32,7 @@ Route::get('/subcategory', [SubcategoryController::class, 'index']);
 Route::get('/social/links', [SocialLinksController::class, 'index']);
 Route::get('/settings', [SettingsController::class, 'index']);
 Route::get('/faq', [FaqController::class, 'index']);
-Route::post('subscriber/store',[SubscriberController::class, 'store'])->name('subscriber.store');
+Route::post('subscriber/store', [SubscriberController::class, 'store'])->name('subscriber.store');
 
 /*
 # Post
@@ -59,20 +60,19 @@ Route::middleware(['auth:api'])->controller(ImageController::class)->prefix('aut
 
 Route::group(['middleware' => 'guest:api'], function ($router) {
 
-    
+
     //register
     Route::post('register', [RegisterController::class, 'register']);
     Route::post('/verify-mobile-otp', [RegisterController::class, 'verifyPhoneOtp']);
     Route::post('/resend-otp', [RegisterController::class, 'resendPhoneOtp']);
-   
 });
 
 Route::group(['middleware' => ['auth:api', 'api-otp']], function ($router) {
-    
+
     // Route::get('/me', [UserController::class, 'me']);
     Route::post('/update-profile', [UserController::class, 'updateProfile']);
     // Route::post('/update-avatar', [UserController::class, 'updateAvatar']);
-    
+
 
 });
 
@@ -103,7 +103,7 @@ Route::middleware(['auth:api'])->controller(NotificationController::class)->pref
 */
 
 Route::middleware(['auth:api'])->controller(ChatController::class)->prefix('auth/chat')->group(function () {
-   
+
     Route::get('/list', 'list');
     Route::post('/send/{receiver_id}', 'send');
     Route::get('/conversation/{receiver_id}', 'conversation');
@@ -111,29 +111,62 @@ Route::middleware(['auth:api'])->controller(ChatController::class)->prefix('auth
     Route::get('/search', 'search');
     Route::get('/seen/all/{receiver_id}', 'seenAll');
     Route::get('/seen/single/{chat_id}', 'seenSingle');
-
-    
 });
 
 
 
 Route::middleware(['auth:api'])->controller(GroupController::class)->prefix('auth/group')->group(function () {
-   
+
     Route::get('/list', 'list');
     Route::post('/create', 'create');
     Route::get('/show/{group_id}', 'show');
     Route::post('/update/{group_id}', 'update');
     Route::delete('/delete/{group_id}', 'destroy');
-    Route::post('/add/member/{group_id}', 'addMember');
+    Route::post('add/member/{group_id}', 'addMember');
     Route::post('/remove/member/{group_id}', 'removeMember');
+
+
     Route::post('/leave/member/{group_id}', 'leaveMember');
+
+    
     Route::post('/mute/member/{group_id}', 'muteMember');
     Route::post('/unmute/member/{group_id}', 'unmuteMember');
     Route::post('/ban/member/{group_id}', 'banMember');
     Route::post('/unban/member/{group_id}', 'unbanMember');
 
-    
+    // New routes
+    Route::patch('/promote/member/{group_id}/{user_id}', 'promoteMember');
+    Route::patch('/demote/member/{group_id}/{user_id}', 'demoteMember'); 
 });
+
+
+
+// channel management
+Route::middleware(['auth:api'])->controller(ChannelManageController::class)->prefix('auth/channel')->group(function () {
+    Route::get('/list', 'list');
+    Route::post('/store', 'store');
+    Route::post('channel_type/{channel_id}','setType');
+
+
+    Route::get('/show/{channel_id}', 'show');
+    Route::post('/update/{channel_id}', 'update');
+    Route::delete('/delete/{channel_id}', 'destroy');
+    Route::post('/add/member/{channel_id}', 'addMember');
+    Route::post('/remove/member/{channel_id}', 'removeMember');
+    Route::post('/leave/member/{channel_id}', 'leaveMember');
+});
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
 # CMS

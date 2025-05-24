@@ -132,5 +132,22 @@ class User extends Authenticatable implements JWTSubject
     public function posts() {
         return $this->hasMany(Post::class);
     }
+
+
+    // group model relation
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'group_members')
+            ->withPivot('role', 'joined_at')
+            ->withTimestamps();
+    }
+
+    // channel model relation
+    public function channels()
+    {
+        return $this->belongsToMany(Channel::class, 'channel_members')
+            ->withPivot('role', 'joined_at', 'left_at', 'is_active')
+            ->withTimestamps();
+    }
     
 }
