@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('channel_id')->constrained('channels')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
 
-            $table->enum('role', ['admin', 'member'])->default('member');
+            $table->enum('role', ['admin', 'member'])->default('admin');
             $table->timestamp('joined_at')->useCurrent();
             $table->timestamp('left_at')->nullable();
             $table->boolean('is_active')->default(true);

@@ -151,9 +151,12 @@ Route::middleware(['auth:api'])->controller(ChannelManageController::class)->pre
     Route::get('/show/{channel_id}', 'show');
     Route::post('/update/{channel_id}', 'update');
     Route::delete('/delete/{channel_id}', 'destroy');
-    Route::post('/add/member/{channel_id}', 'addMember');
-    Route::post('/remove/member/{channel_id}', 'removeMember');
-    Route::post('/leave/member/{channel_id}', 'leaveMember');
+
+
+
+    Route::post('/add/subscriber/{channel_id}', 'addMember');
+    Route::post('/subscriber/member/{channel_id}', 'removeMember');
+    Route::post('/leave/subscriber/{channel_id}', 'leaveMember');
 });
 
 
