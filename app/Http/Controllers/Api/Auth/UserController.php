@@ -105,11 +105,7 @@ class UserController extends Controller
             });
         }
 
-        if ($request->has('role') && !empty($request->role)) {
-            $query->whereHas('roles', function ($q) use ($request) {
-                $q->where('name', $request->role);
-            });
-        }
+      
 
         $users = $query->paginate(10);
 
@@ -117,6 +113,7 @@ class UserController extends Controller
     }
 
 
+    // new comment 
 
 
 }
