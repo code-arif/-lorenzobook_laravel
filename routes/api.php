@@ -67,13 +67,14 @@ Route::group(['middleware' => 'guest:api'], function ($router) {
     Route::post('/resend-otp', [RegisterController::class, 'resendPhoneOtp']);
 });
 
-Route::group(['middleware' => ['auth:api', 'api-otp']], function ($router) {
+Route::group(['middleware' =>'auth:api'], function ($router) {
 
-    // Route::get('/me', [UserController::class, 'me']);
+    Route::get('/me', [UserController::class, 'me']);
     Route::post('/update-profile', [UserController::class, 'updateProfile']);
     // Route::post('/update-avatar', [UserController::class, 'updateAvatar']);
-
-
+    
+    
+    Route::get('/user/list', [UserController::class, 'user_list']);
 });
 
 /*

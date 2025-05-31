@@ -14,7 +14,7 @@ class UserController extends Controller
     public $select;
     public function __construct()
     {
-        $this->select = ['id', 'first_name', 'last_name', 'cover'];
+        $this->select = ['id', 'first_name', 'last_name', 'cover', 'mobile_number'];
     }
 
     public function me()
@@ -89,4 +89,34 @@ class UserController extends Controller
         $user->forceDelete();
         return Helper::jsonResponse(true, 'Profile deleted successfully', 200);
     }
+
+
+
+    // user list
+    public function user_list(Request $request)
+    {
+        $query = User::select($this->select)->whereNull('email')->with('roles');
+
+        if ($request->has('search') && !empty($request->search)) {
+            $query->where(function ($q) use ($request) {
+                $q->where('first_name', 'like', '%' . $request->search . '%')
+                    ->orWhere('last_name', 'like', '%' . $request->search . '%')
+                    ->orWhere('mobile_number', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->has('role') && !empty($request->role)) {
+            $query->whereHas('roles', function ($q) use ($request) {
+                $q->where('name', $request->role);
+            });
+        }
+
+        $users = $query->paginate(10);
+
+        return Helper::jsonResponse(true, 'User list fetched successfully', 200, $users);
+    }
+
+
+
+
 }
