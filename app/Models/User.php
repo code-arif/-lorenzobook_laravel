@@ -102,11 +102,13 @@ class User extends Authenticatable implements JWTSubject
     }
 
     //chat model relation
-    public function senders() {
+    public function senders()
+    {
         return $this->hasMany(Chat::class, 'sender_id');
     }
 
-    public function receivers() {
+    public function receivers()
+    {
         return $this->hasMany(Chat::class, 'receiver_id');
     }
 
@@ -125,11 +127,13 @@ class User extends Authenticatable implements JWTSubject
         return Room::where('user_one_id', $this->id)->orWhere('user_two_id', $this->id);
     }
 
-    public function profile() {
+    public function profile()
+    {
         return $this->hasOne(Profile::class);
     }
 
-    public function posts() {
+    public function posts()
+    {
         return $this->hasMany(Post::class);
     }
 
@@ -149,5 +153,17 @@ class User extends Authenticatable implements JWTSubject
             ->withPivot('role', 'joined_at', 'left_at', 'is_active')
             ->withTimestamps();
     }
-    
+
+
+    // get the users you have added
+    public function friends()
+    {
+        return $this->belongsToMany(User::class, 'friends', 'user_id', 'friend_id');
+    }
+
+    // get the users who have added you
+    public function friendOf()
+    {
+        return $this->belongsToMany(User::class, 'friends', 'friend_id', 'user_id');
+    }
 }

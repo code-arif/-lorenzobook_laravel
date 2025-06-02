@@ -95,7 +95,7 @@ class UserController extends Controller
     // user list
     public function user_list(Request $request)
     {
-        $query = User::select($this->select)->whereNull('email')->whereNot('id', '=!' , auth('api')->id())->with('roles');
+        $query = User::select($this->select)->whereNull('email')->whereNot('id', '=' , auth('api')->id())->with('roles');
 
         if ($request->has('search') && !empty($request->search)) {
             $query->where(function ($q) use ($request) {
@@ -104,6 +104,7 @@ class UserController extends Controller
                     ->orWhere('mobile_number', 'like', '%' . $request->search . '%');
             });
         }
+        
 
       
 

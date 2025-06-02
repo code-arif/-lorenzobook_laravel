@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\FirebaseTokenController;
 use App\Http\Controllers\Api\Frontend\categoryController;
 use App\Http\Controllers\Api\Frontend\FaqController;
+use App\Http\Controllers\Api\Frontend\FriendController;
 use App\Http\Controllers\Api\Frontend\HomeController;
 use App\Http\Controllers\Api\Frontend\ImageController;
 use App\Http\Controllers\Api\Frontend\PostController;
@@ -99,9 +100,26 @@ Route::middleware(['auth:api'])->controller(NotificationController::class)->pref
     Route::get('status/read/{id}', 'readSingle');
 })->middleware('auth:api');
 
+
+
+
+
+Route::middleware(['auth:api'])->controller(FriendController::class)->prefix('auth/friend')->group(function () {
+
+    Route::get('/list', 'list');
+    Route::post('/send', 'send');
+   
+});
+
+
+
+
+
 /*
 # Chat Route
 */
+
+
 
 Route::middleware(['auth:api'])->controller(ChatController::class)->prefix('auth/chat')->group(function () {
 
