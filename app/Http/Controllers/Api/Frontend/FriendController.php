@@ -22,10 +22,6 @@ class FriendController extends Controller
     }
 
 
-
-
-
-
     public function send(Request $request)
     {
         $user_id = auth('api')->id();
@@ -57,6 +53,6 @@ class FriendController extends Controller
         ]);
 
 
-        return $this->success($friend, 'Friend Request Sent', 201);
+        return $this->success($friend, 'Friend add to contacts', 201);
     }
 }
