@@ -16,7 +16,7 @@ class CustomRedirectMiddleware
             if (Auth::guard('web')->user()->hasRole('developer')) {
                 return redirect()->intended(route('developer.dashboard', absolute: false));
             }elseif (Auth::guard('web')->user()->hasRole('admin')) {
-                Log::info('User logged in successfully', ['email' => Auth::guard('web')->user()->email]);
+                Log::info('Admin user logged in', ['user_id' => Auth::guard('web')->user()->id]);
                 return redirect()->intended(route('admin.dashboard', absolute: false));
             }else{
                 Auth::logout();
