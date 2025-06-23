@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name')->nullable();
             $table->string('image_url')->nullable();
             $table->string('group_type')->default('private'); // private, publi
-            $table->foreignId('created_by')->constrained('users')->onDelete('cascade'); 
+            $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -26,6 +26,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('chat_groups');
+        Schema::dropIfExists('
+        groups');
     }
 };

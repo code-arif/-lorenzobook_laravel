@@ -12,28 +12,25 @@ class UserListController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = User::select('id', 'name','email', 'avatar', 'created_at','status')
-                        ->where('role', 'user')
-                        ->latest();
+            $data = User::select('id', 'first_name','last_name' ,'email','mobile_number','cover', 'created_at')->whereNull('email')->latest();
 
             return DataTables::of($data)
                 ->addIndexColumn()
-                ->addColumn('avatar', function ($data) {
-                    if ($data->avatar) {
-                        $url = asset($data->avatar);
-                        return '<img src="' . $url . '" alt="avatar" width="50px" height="50px">';
+                ->addColumn('name' , function ($data) {
+                    return $data->first_name . ' ' . $data->last_name;
+                })
+                ->addColumn('cover', function ($data) {
+                    if ($data->cover) {
+                        $url = asset($data->cover);
+                        return '<img src="' . $url . '" alt="cover" width="50px" height="50px">';
                     } else {
                         return '---';
                     }
                 })
-                ->addColumn('email', function ($data) {
-                    return $data->email ?? '---';
-                })
-
                 ->addColumn('created_at', function ($data) {
                     return $data->created_at ? $data->created_at->format('Y-m-d') : '---';
                 })
-                ->rawColumns(['avatar', 'email', 'city', 'created_at'])
+                ->rawColumns(['name','cover','mobile_number', 'city', 'created_at'])
                 ->make(true);
         }
         return view("backend.layouts.user.index");

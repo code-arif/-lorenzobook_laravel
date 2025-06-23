@@ -52,8 +52,10 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col">
-                                    <h3 class="mb-2 fw-semibold">45</h3>
-                                    <p class="text-muted fs-13 mb-0">Total Category</p>
+                                    <h3 class="mb-2 fw-semibold">
+                                        {{ $all_groups ?? 0}}
+                                    </h3>
+                                    <p class="text-muted fs-13 mb-0">Total Groups</p>
                                 </div>
                                 <div class="col col-auto top-icn dash">
                                     <div
@@ -72,8 +74,10 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col">
-                                    <h3 class="mb-2 fw-semibold">45</h3>
-                                    <p class="text-muted fs-13 mb-0">Total Service</p>
+                                    <h3 class="mb-2 fw-semibold">
+                                        {{ $all_channels ?? 0}}
+                                    </h3>
+                                    <p class="text-muted fs-13 mb-0">Total Channels</p>
                                 </div>
                                 <div class="col col-auto top-icn dash">
                                     <div class="counter-icon bg-info dash ms-auto box-shadow-info">
@@ -92,8 +96,10 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col">
-                                    <h3 class="mb-2 fw-semibold">65</h3>
-                                    <p class="text-muted fs-13 mb-0">Today Booking</p>
+                                    <h3 class="mb-2 fw-semibold">
+                                        {{ $all_rooms ?? 0}}
+                                    </h3>
+                                    <p class="text-muted fs-13 mb-0">Total Rooms</p>
                                 </div>
                                 <div class="col col-auto top-icn dash">
                                     <div class="counter-icon bg-warning dash ms-auto box-shadow-warning">
@@ -1027,15 +1033,15 @@
             const response = await fetch('/transactions.json');
             const transactionData = await response.json();
 
-            const categories = Object.keys(transactionData).map(month => 
+            const categories = Object.keys(transactionData).map(month =>
                 month.charAt(0).toUpperCase() + month.slice(1)
             );
-            
-            const incrementData = Object.values(transactionData).map(value => 
+
+            const incrementData = Object.values(transactionData).map(value =>
                 parseFloat(value.increment)
             );
-            
-            const decrementData = Object.values(transactionData).map(value => 
+
+            const decrementData = Object.values(transactionData).map(value =>
                 parseFloat(value.decrement)
             );
 

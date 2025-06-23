@@ -31,23 +31,23 @@
                     </a>
                 </li>
                 <li class="slide">
-                    <a class="side-menu__item {{  request()->routeIs('users') ? 'has-link' : '' }}" href="{{ route('admin.users.index') }}">
+                    <a class="side-menu__item {{  request()->routeIs('user') ? 'has-link' : '' }}" href="{{ route('admin.user.index') }}">
                         <i class="fa-solid fa-users side-menu__icon"></i>
                         <span class="side-menu__label">User List</span>
                     </a>
                 </li>
                 <li class="slide">
-                    <a class="side-menu__item {{  request()->routeIs('subcategory') ? 'has-link' : '' }}" href="{{ route('admin.subcategory.index') }}">
-                        <i class="fa-solid fa-list-check side-menu__icon"></i>
-                        <span class="side-menu__label">Sub Category</span>
+                    <a class="side-menu__item {{  request()->routeIs('group') ? 'has-link' : '' }}" href="{{ route('admin.group.index') }}">
+                        <i class="fa-solid fa-users-rays side-menu__icon"></i>
+                        <span class="side-menu__label">Group List </span>
                     </a>
                 </li>
-                <li class="slide">
+                {{-- <li class="slide">
                     <a class="side-menu__item {{  request()->routeIs('post') ? 'has-link' : '' }}" href="{{ route('admin.post.index') }}">
                         <i class="fa-solid fa-blog side-menu__icon"></i>
                         <span class="side-menu__label">Post</span>
                     </a>
-                </li>
+                </li> --}}
                 <li>
                     <h3>Components</h3>
                 </li>

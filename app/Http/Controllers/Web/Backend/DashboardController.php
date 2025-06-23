@@ -46,10 +46,16 @@ class DashboardController extends Controller
         }
 
         $all_users = User::count();
+        $all_groups = DB::table('groups')->count();
+        $all_channels = DB::table('channels')->count();
+        $all_rooms = DB::table('rooms')->count();
 
         return view('backend.layouts.dashboard', [
             'all_users' => $all_users,
-            
+            'all_groups' => $all_groups,
+            'all_channels' => $all_channels,
+            'all_rooms' => $all_rooms
+
         ]);
     }
 }

@@ -10,6 +10,7 @@ use App\Http\Controllers\Web\Backend\ContactController;
 use App\Http\Controllers\Web\Backend\CategoryController;
 use App\Http\Controllers\Web\Backend\UserListController;
 use App\Http\Controllers\Web\Backend\DashboardController;
+use App\Http\Controllers\Web\Backend\GroupListController;
 use App\Http\Controllers\Web\Backend\SocialLinkController;
 use App\Http\Controllers\Web\Backend\SubscriberController;
 use App\Http\Controllers\Web\Backend\Access\RoleController;
@@ -30,7 +31,9 @@ use App\Http\Controllers\Web\Backend\CMS\Web\Home\HomeBannerController;
 Route::get("dashboard", [DashboardController::class, 'index'])->name('dashboard');
 
 
-Route::get('/user-list' , [UserListController::class, 'index'])->name('admin.users.index');
+Route::get('/user-list' , [UserListController::class, 'index'])->name('user.index');
+
+Route::get('/group-list' , [GroupListController::class, 'index'])->name('group.index');
 
 /*
 * CRUD
