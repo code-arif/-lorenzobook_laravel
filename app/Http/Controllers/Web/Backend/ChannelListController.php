@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\Web\Backend;
 
-use App\Models\Group;
+use App\Models\Channel;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use App\Http\Controllers\Controller;
 
-class GroupListController extends Controller
+class ChannelListController extends Controller
 {
-     public function index(Request $request)
+    public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Group::select('id', 'name', 'image_url', 'group_type', 'created_by', 'created_at')->with('createdBy')->latest();
+            $data = Channel::select('id', 'name', 'image_url', 'channel_type', 'created_by', 'created_at')->with('createdBy')->latest();
 
             return DataTables::of($data)
                 ->addIndexColumn()
@@ -22,10 +22,13 @@ class GroupListController extends Controller
                 ->addColumn('image_url', function ($data) {
                     if ($data->image_url) {
                         $url = asset($data->image_url);
-                        return '<img src="' . $url . '" alt="group image" width="50px" height="50px">';
+                        return '<img src="' . $url . '" alt="channel image" width="50px" height="50px">';
                     } else {
                         return '---';
                     }
+                })
+                ->addColumn('channel_type', function ($data) {
+                    return ucfirst($data->channel_type);
                 })
                 ->addColumn('created_at', function ($data) {
                     return $data->created_at ? $data->created_at->format('Y-m-d') : '---';
@@ -33,6 +36,6 @@ class GroupListController extends Controller
                 ->rawColumns(['image_url', 'created_by', 'created_at'])
                 ->make(true);
         }
-        return view("backend.layouts.group.index");
+        return view("backend.layouts.channel.index");
     }
 }

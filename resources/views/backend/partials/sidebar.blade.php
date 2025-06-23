@@ -42,12 +42,12 @@
                         <span class="side-menu__label">Group List </span>
                     </a>
                 </li>
-                {{-- <li class="slide">
-                    <a class="side-menu__item {{  request()->routeIs('post') ? 'has-link' : '' }}" href="{{ route('admin.post.index') }}">
-                        <i class="fa-solid fa-blog side-menu__icon"></i>
-                        <span class="side-menu__label">Post</span>
+                <li class="slide">
+                    <a class="side-menu__item {{  request()->routeIs('channel') ? 'has-link' : '' }}" href="{{ route('admin.channel.index') }}">
+                        <i class="fa-solid fa-tower-broadcast side-menu__icon"></i>
+                        <span class="side-menu__label">Channel List</span>
                     </a>
-                </li> --}}
+                </li>
                 <li>
                     <h3>Components</h3>
                 </li>

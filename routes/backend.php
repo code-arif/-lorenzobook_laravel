@@ -15,6 +15,7 @@ use App\Http\Controllers\Web\Backend\SocialLinkController;
 use App\Http\Controllers\Web\Backend\SubscriberController;
 use App\Http\Controllers\Web\Backend\Access\RoleController;
 use App\Http\Controllers\Web\Backend\Access\UserController;
+use App\Http\Controllers\Web\Backend\ChannelListController;
 use App\Http\Controllers\Web\Backend\SubcategoryController;
 use App\Http\Controllers\Web\Backend\Settings\OtherController;
 use App\Http\Controllers\Web\Backend\Settings\SocialController;
@@ -34,6 +35,8 @@ Route::get("dashboard", [DashboardController::class, 'index'])->name('dashboard'
 Route::get('/user-list' , [UserListController::class, 'index'])->name('user.index');
 
 Route::get('/group-list' , [GroupListController::class, 'index'])->name('group.index');
+
+Route::get('channel-list', [ChannelListController::class, 'index'])->name('channel.index');
 
 /*
 * CRUD

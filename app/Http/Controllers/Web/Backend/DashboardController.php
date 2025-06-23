@@ -15,47 +15,47 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $days = collect(range(0, 29))->map(function ($i) {
+            return now()->subDays($i)->format('Y-m-d');
+        })->reverse()->values();
 
-        $all_months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+        $roomCounts = \App\Models\Room::selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->where('created_at', '>=', now()->subDays(29)->startOfDay())
+            ->groupBy('date')
+            ->pluck('count', 'date');
 
-        $transactions = Transaction::select(
-            DB::raw("MONTHNAME(created_at) as month"),
-            DB::raw("SUM(CASE WHEN type = 'increment' THEN amount ELSE 0 END) as increment_total"),
-            DB::raw("SUM(CASE WHEN type = 'decrement' THEN amount ELSE 0 END) as decrement_total")
-        )
-            ->where('status', 'success')
-            ->groupBy('month')
-            ->get()
-            ->mapWithKeys(function ($item) {
-                return [
-                    strtolower($item->month) => [
-                        'increment' => number_format($item->increment_total, 2),
-                        'decrement' => number_format($item->decrement_total, 2)
-                    ]
-                ];
-            });
+        $groupCounts = \App\Models\Group::selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->where('created_at', '>=', now()->subDays(29)->startOfDay())
+            ->groupBy('date')
+            ->pluck('count', 'date');
 
-        $formatted_data = collect($all_months)->mapWithKeys(function ($month) use ($transactions) {
+        $channelCounts = \App\Models\Channel::selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->where('created_at', '>=', now()->subDays(29)->startOfDay())
+            ->groupBy('date')
+            ->pluck('count', 'date');
+
+        $formatted_data = $days->mapWithKeys(function ($date) use ($roomCounts, $groupCounts, $channelCounts) {
             return [
-                $month => $transactions->get($month, ['increment' => '0.00', 'decrement' => '0.00'])
+                $date => [
+                    'rooms' => (int) ($roomCounts[$date] ?? 0),
+                    'groups' => (int) ($groupCounts[$date] ?? 0),
+                    'channels' => (int) ($channelCounts[$date] ?? 0),
+                ]
             ];
         });
 
-        if (file_exists(public_path('transactions.json'))) {
-            file_put_contents(public_path('transactions.json'), $formatted_data->toJson());
-        }
+        file_put_contents(public_path('transactions.json'), $formatted_data->toJson());
 
-        $all_users = User::count();
-        $all_groups = DB::table('groups')->count();
-        $all_channels = DB::table('channels')->count();
-        $all_rooms = DB::table('rooms')->count();
+        $all_users = \App\Models\User::count();
+        $all_groups = \App\Models\Group::count();
+        $all_channels = \App\Models\Channel::count();
+        $all_rooms = \App\Models\Room::count();
 
         return view('backend.layouts.dashboard', [
             'all_users' => $all_users,
             'all_groups' => $all_groups,
             'all_channels' => $all_channels,
             'all_rooms' => $all_rooms
-
         ]);
     }
 }
