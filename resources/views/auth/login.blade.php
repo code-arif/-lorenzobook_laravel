@@ -27,11 +27,14 @@
                 <div class="alert alert-danger">{{ $message }}</div>
                 @enderror
 
-                <div class="wrap-input100 validate-input" data-bs-validate="Password is required">
-                    <input class="input100" type="password" name="password" placeholder="Password">
+                <div class="wrap-input100 validate-input" data-bs-validate="Password is required" style="position: relative;">
+                    <input class="input100" type="password" name="password" id="password" placeholder="Password">
                     <span class="focus-input100"></span>
                     <span class="symbol-input100">
                         <i class="zmdi zmdi-lock" aria-hidden="true"></i>
+                    </span>
+                    <span class="password-toggle" onclick="togglePasswordVisibility()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 1.5rem; cursor: pointer;">
+                        <i id="password-icon" class="zmdi zmdi-eye" aria-hidden="true"></i>
                     </span>
                 </div>
                 @error('password')
@@ -41,7 +44,7 @@
                 <div class="text-end pt-1">
                     <p class="mb-0"><a href="{{ route('password.request') }}" class="text-primary ms-1">Forgot Password?</a></p>
                 </div>
-                
+
                 @if(config('settings.recaptcha') === 'yes')
                 <div class="bi-login-input-wrapper save mt-3 mb-1">
                     {!! htmlFormSnippet() !!}
@@ -66,4 +69,21 @@
     </div>
 </div>
 <!-- CONTAINER CLOSED -->
+
+<script>
+    function togglePasswordVisibility() {
+        const passwordField = document.getElementById('password');
+        const passwordIcon = document.getElementById('password-icon');
+
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            passwordIcon.classList.remove('zmdi-eye');
+            passwordIcon.classList.add('zmdi-eye-off');
+        } else {
+            passwordField.type = 'password';
+            passwordIcon.classList.remove('zmdi-eye-off');
+            passwordIcon.classList.add('zmdi-eye');
+        }
+    }
+</script>
 @endsection
