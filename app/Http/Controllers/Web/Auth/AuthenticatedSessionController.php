@@ -27,11 +27,14 @@ class AuthenticatedSessionController extends Controller
     {
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
 
-            $request->authenticate();
+            // $request->authenticate();
 
-            $request->session()->regenerate();
-            session()->put('t-success', 'Password Confirmed Successfully');
-            return app(CustomRedirectMiddleware::class)->handle($request, function () {});
+            // $request->session()->regenerate();
+            // session()->put('t-success', 'Password Confirmed Successfully');
+            // return app(CustomRedirectMiddleware::class)->handle($request, function () {});
+
+                return redirect()->intended(route('admin.dashboard', absolute: false));
+
 
         }else{
             return back()->withErrors([
