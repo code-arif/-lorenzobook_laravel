@@ -1,33 +1,36 @@
 <?php
 
-use App\Http\Controllers\Web\Backend\Access\PermissionController;
-use App\Http\Controllers\Web\Backend\Access\RoleController;
-use App\Http\Controllers\Web\Backend\Access\UserController;
-use App\Http\Controllers\Web\Backend\CategoryController;
-use App\Http\Controllers\Web\Backend\ChatController;
-use App\Http\Controllers\Web\Backend\CMS\Web\Home\HomeBannerController;
-use App\Http\Controllers\Web\Backend\ContactController;
-use App\Http\Controllers\Web\Backend\Settings\FirebaseController;
-use App\Http\Controllers\Web\Backend\Settings\ProfileController;
-use App\Http\Controllers\Web\Backend\Settings\MailSettingController;
-use App\Http\Controllers\Web\Backend\Settings\SettingController;
-use App\Http\Controllers\Web\Backend\Settings\SocialController;
-use App\Http\Controllers\Web\Backend\Settings\StripeController;
-use App\Http\Controllers\Web\Backend\Settings\GoogleMapController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Web\Backend\DashboardController;
 use App\Http\Controllers\Web\Backend\FaqController;
-use App\Http\Controllers\Web\Backend\ImageController;
+use App\Http\Controllers\Web\Backend\ChatController;
 use App\Http\Controllers\Web\Backend\PageController;
 use App\Http\Controllers\Web\Backend\PostController;
-use App\Http\Controllers\Web\Backend\Settings\CaptchaController;
-use App\Http\Controllers\Web\Backend\Settings\OtherController;
+use App\Http\Controllers\Web\Backend\ImageController;
+use App\Http\Controllers\Web\Backend\ContactController;
+use App\Http\Controllers\Web\Backend\CategoryController;
+use App\Http\Controllers\Web\Backend\UserListController;
+use App\Http\Controllers\Web\Backend\DashboardController;
 use App\Http\Controllers\Web\Backend\SocialLinkController;
-use App\Http\Controllers\Web\Backend\SubcategoryController;
 use App\Http\Controllers\Web\Backend\SubscriberController;
+use App\Http\Controllers\Web\Backend\Access\RoleController;
+use App\Http\Controllers\Web\Backend\Access\UserController;
+use App\Http\Controllers\Web\Backend\SubcategoryController;
+use App\Http\Controllers\Web\Backend\Settings\OtherController;
+use App\Http\Controllers\Web\Backend\Settings\SocialController;
+use App\Http\Controllers\Web\Backend\Settings\StripeController;
+use App\Http\Controllers\Web\Backend\Settings\CaptchaController;
+use App\Http\Controllers\Web\Backend\Settings\ProfileController;
+use App\Http\Controllers\Web\Backend\Settings\SettingController;
+use App\Http\Controllers\Web\Backend\Access\PermissionController;
+use App\Http\Controllers\Web\Backend\Settings\FirebaseController;
+use App\Http\Controllers\Web\Backend\Settings\GoogleMapController;
+use App\Http\Controllers\Web\Backend\Settings\MailSettingController;
+use App\Http\Controllers\Web\Backend\CMS\Web\Home\HomeBannerController;
 
 Route::get("dashboard", [DashboardController::class, 'index'])->name('dashboard');
 
+
+Route::get('/user-list' , [UserListController::class, 'index'])->name('admin.users.index');
 
 /*
 * CRUD
@@ -129,7 +132,7 @@ Route::prefix('cms')->name('cms.')->group(function () {
 
         Route::put('/content', 'content')->name('content');
     });
-    
+
 });
 
 /*

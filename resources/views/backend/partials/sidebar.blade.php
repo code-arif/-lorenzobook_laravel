@@ -31,9 +31,9 @@
                     </a>
                 </li>
                 <li class="slide">
-                    <a class="side-menu__item {{  request()->routeIs('category') ? 'has-link' : '' }}" href="{{ route('admin.category.index') }}">
-                        <i class="fa-solid fa-list side-menu__icon"></i>
-                        <span class="side-menu__label">Category</span>
+                    <a class="side-menu__item {{  request()->routeIs('users') ? 'has-link' : '' }}" href="{{ route('admin.users.index') }}">
+                        <i class="fa-solid fa-users side-menu__icon"></i>
+                        <span class="side-menu__label">User List</span>
                     </a>
                 </li>
                 <li class="slide">
