@@ -1,14 +1,15 @@
 <?php
-
 namespace App\Http\Controllers\Web\Auth;
 
-use App\Http\Controllers\Controller;
-use App\Http\Middleware\CustomRedirectMiddleware;
-use App\Http\Requests\Auth\LoginRequest;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\RedirectResponse;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Middleware\CustomRedirectMiddleware;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -23,22 +24,26 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request)
     {
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+        try {
+            if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
 
-            // $request->authenticate();
+                $request->authenticate();
 
-            // $request->session()->regenerate();
-            // session()->put('t-success', 'Password Confirmed Successfully');
-            // return app(CustomRedirectMiddleware::class)->handle($request, function () {});
+                $request->session()->regenerate();
+                session()->put('t-success', 'Password Confirmed Successfully');
+                Log::info('User logged in successfully', ['email' => $request->email]);
+                return app(CustomRedirectMiddleware::class)->handle($request, function () {});
 
-                return redirect()->intended(route('admin.dashboard', absolute: false));
-
-
-        }else{
+            } else {
+                return back()->withErrors([
+                    'email' => 'The provided credentials do not match our records.',
+                ]);
+            }
+        } catch (\Throwable $th) {
             return back()->withErrors([
-                'email' => 'The provided credentials do not match our records.',
+                'email' => 'An error occurred while trying to log in. Please try again later.',
             ]);
         }
     }
