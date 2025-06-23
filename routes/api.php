@@ -6,10 +6,12 @@ use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\Auth\UserController;
 use App\Http\Controllers\Api\Auth\SocialLoginController;
+use App\Http\Controllers\Api\ChannelManageController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\FirebaseTokenController;
 use App\Http\Controllers\Api\Frontend\categoryController;
 use App\Http\Controllers\Api\Frontend\FaqController;
+use App\Http\Controllers\Api\Frontend\FriendController;
 use App\Http\Controllers\Api\Frontend\HomeController;
 use App\Http\Controllers\Api\Frontend\ImageController;
 use App\Http\Controllers\Api\Frontend\PostController;
@@ -18,7 +20,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\Frontend\SettingsController;
 use App\Http\Controllers\Api\Frontend\SocialLinksController;
 use App\Http\Controllers\Api\Frontend\SubscriberController;
-
+use App\Http\Controllers\Api\GroupController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -31,7 +33,7 @@ Route::get('/subcategory', [SubcategoryController::class, 'index']);
 Route::get('/social/links', [SocialLinksController::class, 'index']);
 Route::get('/settings', [SettingsController::class, 'index']);
 Route::get('/faq', [FaqController::class, 'index']);
-Route::post('subscriber/store',[SubscriberController::class, 'store'])->name('subscriber.store');
+Route::post('subscriber/store', [SubscriberController::class, 'store'])->name('subscriber.store');
 
 /*
 # Post
@@ -59,32 +61,21 @@ Route::middleware(['auth:api'])->controller(ImageController::class)->prefix('aut
 
 Route::group(['middleware' => 'guest:api'], function ($router) {
 
-    
+
     //register
     Route::post('register', [RegisterController::class, 'register']);
-    Route::post('/verify-email', [RegisterController::class, 'VerifyEmail']);
-    Route::post('/resend-otp', [RegisterController::class, 'ResendOtp']);
-    Route::post('/verify-otp', [RegisterController::class, 'VerifyEmail']);
-
-
-    //login
-    Route::post('login', [LoginController::class, 'login'])->name('login');
-    //forgot password
-    Route::post('/forget-password', [ResetPasswordController::class, 'forgotPassword']);
-    Route::post('/otp-token', [ResetPasswordController::class, 'MakeOtpToken']);
-    Route::post('/reset-password', [ResetPasswordController::class, 'ResetPassword']);
-    //social login
-    Route::post('/social-login', [SocialLoginController::class, 'SocialLogin']);
+    Route::post('/verify-mobile-otp', [RegisterController::class, 'verifyPhoneOtp']);
+    Route::post('/resend-otp', [RegisterController::class, 'resendPhoneOtp']);
 });
 
-Route::group(['middleware' => ['auth:api', 'api-otp']], function ($router) {
-    Route::get('/refresh-token', [LoginController::class, 'refreshToken']);
-    Route::post('/logout', [LogoutController::class, 'logout']);
+Route::group(['middleware' =>'auth:api'], function ($router) {
+
     Route::get('/me', [UserController::class, 'me']);
-    Route::get('/account/switch', [UserController::class, 'accountSwitch']);
     Route::post('/update-profile', [UserController::class, 'updateProfile']);
-    Route::post('/update-avatar', [UserController::class, 'updateAvatar']);
-    Route::delete('/delete-profile', [UserController::class, 'destroy']);
+    // Route::post('/update-avatar', [UserController::class, 'updateAvatar']);
+    
+    
+    Route::get('/user/list', [UserController::class, 'user_list']);
 });
 
 /*
@@ -109,12 +100,29 @@ Route::middleware(['auth:api'])->controller(NotificationController::class)->pref
     Route::get('status/read/{id}', 'readSingle');
 })->middleware('auth:api');
 
+
+
+
+
+Route::middleware(['auth:api'])->controller(FriendController::class)->prefix('auth/friend')->group(function () {
+
+    Route::get('/list', 'list');
+    Route::post('/send', 'send');
+   
+});
+
+
+
+
+
 /*
 # Chat Route
 */
 
+
+
 Route::middleware(['auth:api'])->controller(ChatController::class)->prefix('auth/chat')->group(function () {
-   
+
     Route::get('/list', 'list');
     Route::post('/send/{receiver_id}', 'send');
     Route::get('/conversation/{receiver_id}', 'conversation');
@@ -122,9 +130,65 @@ Route::middleware(['auth:api'])->controller(ChatController::class)->prefix('auth
     Route::get('/search', 'search');
     Route::get('/seen/all/{receiver_id}', 'seenAll');
     Route::get('/seen/single/{chat_id}', 'seenSingle');
+});
+
+
+
+Route::middleware(['auth:api'])->controller(GroupController::class)->prefix('auth/group')->group(function () {
+
+    Route::get('/list', 'list');
+    Route::post('/create', 'create');
+    Route::get('/show/{group_id}', 'show');
+    Route::post('/update/{group_id}', 'update');
+    Route::delete('/delete/{group_id}', 'destroy');
+    Route::post('add/member/{group_id}', 'addMember');
+    Route::post('/remove/member/{group_id}', 'removeMember');
+
+
+    Route::post('/leave/member/{group_id}', 'leaveMember');
 
     
+    Route::post('/mute/member/{group_id}', 'muteMember');
+    Route::post('/unmute/member/{group_id}', 'unmuteMember');
+    Route::post('/ban/member/{group_id}', 'banMember');
+    Route::post('/unban/member/{group_id}', 'unbanMember');
+
+    // New routes
+    Route::patch('/promote/member/{group_id}/{user_id}', 'promoteMember');
+    Route::patch('/demote/member/{group_id}/{user_id}', 'demoteMember'); 
 });
+
+
+
+// channel management
+Route::middleware(['auth:api'])->controller(ChannelManageController::class)->prefix('auth/channel')->group(function () {
+    Route::get('/list', 'list');
+    Route::post('/store', 'store');
+    Route::post('channel_type/{channel_id}','setType');
+
+
+    Route::get('/show/{channel_id}', 'show');
+    Route::post('/update/{channel_id}', 'update');
+    Route::delete('/delete/{channel_id}', 'destroy');
+
+
+
+    Route::post('/add/subscriber/{channel_id}', 'addMember');
+    Route::post('/subscriber/member/{channel_id}', 'removeMember');
+    Route::post('/leave/subscriber/{channel_id}', 'leaveMember');
+});
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
 # CMS

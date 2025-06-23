@@ -17,6 +17,6 @@ class DatabaseSeeder extends Seeder
         $this->call(SubcategorySeeder::class);
         $this->call(NotificationSeeder::class);
         $this->call(PageSeeder::class); 
-        $this->call(TransactionSeeder::class);
+        // $this->call(TransactionSeeder::class);
     }
 }

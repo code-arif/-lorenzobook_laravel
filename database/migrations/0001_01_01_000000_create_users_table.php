@@ -12,18 +12,26 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
+
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
+            $table->string('cover')->nullable();
+            $table->string('email')->unique()->nullable();
+
+            $table->string('first_name')->nullable();
+            $table->string('last_name')->nullable();
+            $table->string('mobile_number')->unique();
+
+
             $table->string('otp')->nullable();
             $table->timestamp('otp_expires_at')->nullable();
             $table->timestamp('otp_verified_at')->nullable();
             $table->longText('reset_password_token')->nullable();
             $table->timestamp('reset_password_token_expire_at')->nullable();
-            $table->string('avatar')->nullable();
-            $table->string('password');
+            $table->string('password')->nullable();
             $table->timestamp('last_activity_at')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
+
+
             $table->rememberToken();
             $table->softDeletes();
             $table->timestamps();

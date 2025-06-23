@@ -33,10 +33,12 @@ class User extends Authenticatable implements JWTSubject
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'email',
+        'first_name',
+        'last_name',
+        'mobile_number',
         'password',
         'otp',
+        'cover',
         'otp_expires_at',
         'last_activity_at'
     ];
@@ -69,7 +71,7 @@ class User extends Authenticatable implements JWTSubject
         ];
     }
 
-    public function getAvatarAttribute($value): string | null
+    public function getCoverAttribute($value): string | null
     {
         if (filter_var($value, FILTER_VALIDATE_URL)) {
             return $value;
@@ -100,11 +102,13 @@ class User extends Authenticatable implements JWTSubject
     }
 
     //chat model relation
-    public function senders() {
+    public function senders()
+    {
         return $this->hasMany(Chat::class, 'sender_id');
     }
 
-    public function receivers() {
+    public function receivers()
+    {
         return $this->hasMany(Chat::class, 'receiver_id');
     }
 
@@ -123,12 +127,43 @@ class User extends Authenticatable implements JWTSubject
         return Room::where('user_one_id', $this->id)->orWhere('user_two_id', $this->id);
     }
 
-    public function profile() {
+    public function profile()
+    {
         return $this->hasOne(Profile::class);
     }
 
-    public function posts() {
+    public function posts()
+    {
         return $this->hasMany(Post::class);
     }
-    
+
+
+    // group model relation
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'group_members')
+            ->withPivot('role', 'joined_at')
+            ->withTimestamps();
+    }
+
+    // channel model relation
+    public function channels()
+    {
+        return $this->belongsToMany(Channel::class, 'channel_members')
+            ->withPivot('role', 'joined_at', 'left_at', 'is_active')
+            ->withTimestamps();
+    }
+
+
+    // get the users you have added
+    public function friends()
+    {
+        return $this->belongsToMany(User::class, 'friends', 'user_id', 'friend_id');
+    }
+
+    // get the users who have added you
+    public function friendOf()
+    {
+        return $this->belongsToMany(User::class, 'friends', 'friend_id', 'user_id');
+    }
 }

@@ -14,45 +14,42 @@ class UserController extends Controller
     public $select;
     public function __construct()
     {
-        $this->select = ['id', 'name', 'email', 'avatar'];   
+        $this->select = ['id', 'first_name', 'last_name', 'cover', 'mobile_number'];
     }
 
     public function me()
-    {   
-        $data = User::select($this->select)->with('roles')->find(auth('api')->user()->id);     
+    {
+        $data = User::select($this->select)->with('roles')->find(auth('api')->user()->id);
         return Helper::jsonResponse(true, 'User details fetched successfully', 200, $data);
     }
 
     public function updateProfile(Request $request)
     {
+
         $validatedData = $request->validate([
-            'name' => 'required|string|max:100',
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
-            'phone' => 'required|string|numeric|max_digits:20',
-            'password' => 'nullable|string|min:6|confirmed',
-            'address' => 'nullable|string|max:255',
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'cover' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
+
         ]);
 
-        if (!empty($validatedData['password'])) {
-            $validatedData['password'] = bcrypt($validatedData['password']);
-        } else if (array_key_exists('password', $validatedData)) {
-            unset($validatedData['password']);
-        }
 
         $user = auth('api')->user();
 
-        if ($request->hasFile('avatar')) {
-            if (!empty($user->avatar)) {
-                Helper::fileDelete(public_path($user->getRawOriginal('avatar')));
+        if ($request->hasFile('cover')) {
+            if (!empty($user->cover)) {
+                Helper::fileDelete(public_path($user->getRawOriginal('cover')));
             }
-            $validatedData['avatar'] = Helper::fileUpload($request->file('avatar'), 'user/avatar', getFileName($request->file('avatar')));
+            $validatedData['cover'] = Helper::fileUpload($request->file('cover'), 'user/cover', getFileName($request->file('cover')));
         } else {
-            $validatedData['avatar'] = $user->avatar;
+            $validatedData['cover'] = $user->cover;
         }
 
         $user->update($validatedData);
 
         $data = User::select($this->select)->with('roles')->find($user->id);
+
+
         return Helper::jsonResponse(true, 'Profile updated successfully', 200, $data);
     }
 
@@ -92,5 +89,32 @@ class UserController extends Controller
         $user->forceDelete();
         return Helper::jsonResponse(true, 'Profile deleted successfully', 200);
     }
-    
+
+
+
+    // user list
+    public function user_list(Request $request)
+    {
+        $query = User::select($this->select)->whereNull('email')->whereNot('id', '=' , auth('api')->id())->with('roles');
+
+        if ($request->has('search') && !empty($request->search)) {
+            $query->where(function ($q) use ($request) {
+                $q->where('first_name', 'like', '%' . $request->search . '%')
+                    ->orWhere('last_name', 'like', '%' . $request->search . '%')
+                    ->orWhere('mobile_number', 'like', '%' . $request->search . '%');
+            });
+        }
+        
+
+      
+
+        $users = $query->paginate(10);
+
+        return Helper::jsonResponse(true, 'User list fetched successfully', 200, $users);
+    }
+
+
+    // new comment 
+
+
 }

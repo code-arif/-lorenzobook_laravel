@@ -2,150 +2,162 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
-use App\Events\RegistrationNotificationEvent;
 use Exception;
 use Carbon\Carbon;
 use App\Models\User;
-use App\Mail\OtpMail;
-use App\Helpers\Helper;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Validator;
-use App\Notifications\RegistrationNotification;
+use App\Services\TwilioService;
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Role;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Validator;
+use App\Traits\ApiResponse;
 
 class RegisterController extends Controller
 {
+    use ApiResponse;
+
     public $select;
+
     public function __construct()
     {
-        $this->select = ['id', 'name', 'email', 'otp', 'avatar'];
+        $this->select = ['id', 'first_name', 'last_name', 'mobile_number', 'otp', 'cover'];
     }
 
-    public function register(Request $request)
+    /**
+     * Register or send OTP if user already exists
+     */
+    public function register(Request $request, TwilioService $twilio)
     {
         $request->validate([
-            'name'       => 'required|string|max:100',
-            'email'      => 'required|string|email|max:150|unique:users',
-            'password'   => 'required|string|min:6|confirmed',
-            'role'       => 'required|exists:roles,id'
+            'mobile_number' => 'required|string|max:20',
         ]);
+
         try {
+            $otp = rand(100000, 999999);
+            $otpExpiresAt = Carbon::now()->addMinutes(10);
 
-            $user = User::create([
-                'name'           => $request->input('name'),
-                'email'          => strtolower($request->input('email')),
-                'password'       => Hash::make($request->input('password')),
-                'otp'            => rand(1000, 9999),
-                'otp_expires_at' => Carbon::now()->addMinutes(60),
-            ]);
+            $user = User::where('mobile_number', $request->mobile_number)->first();
 
-            DB::table('model_has_roles')->insert([
-                'role_id' => $request->input('role'),
-                'model_type' => 'App\Models\User',
-                'model_id' => $user->id
-            ]);
+            if ($user) {
+                // Existing user - update OTP
+                $user->update([
+                    'otp' => $otp,
+                    'otp_expires_at' => $otpExpiresAt,
+                ]);
 
-            //notify to admin start
-            $notiData = [
+                $data = [
+                    'user_id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'cover' => $user->cover,
+                    'mobile_number' => $user->mobile_number,
+                    'otp' => $user->otp,
+                ];
+
+
+                return $this->success($data, 'Existing User, OTP sent to your phone number.');
+            } else {
+                // New user - create and assign role
+                $user = User::create([
+                    'mobile_number' => $request->input('mobile_number'),
+                    'otp' => $otp,
+                    'otp_expires_at' => $otpExpiresAt,
+                ]);
+            }
+
+            // Send OTP via Twilio
+            // $twilio->sendOtp($user->mobile_number, $otp);
+
+
+            $data = [
                 'user_id' => $user->id,
-                'title' => 'User register in successfully.',
-                'body' => 'User register in successfully.'
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'cover' => $user->cover,
+                'mobile_number' => $user->mobile_number,
+                'otp' => $user->otp,
             ];
 
-            $admins = User::role('admin', 'web')->get();
-            foreach($admins as $admin){
-                $admin->notify(new RegistrationNotification($notiData));
-                if(config('settings.reverb')  === 'on'){
-                    broadcast(new RegistrationNotificationEvent($notiData, $admin->id))->toOthers();
-                }
-            }
-            //notify to admin end
 
-            $data = User::select($this->select)->with('roles')->find($user->id);
-
-            return response()->json([
-                'status'     => true,
-                'message'    => 'User register in successfully.',
-                'code'       => 200,
-                'expires_in' => auth('api')->factory()->getTTL() * 60,
-                'data' => $data
-            ], 200);
-            
+            return $this->success($data, 'New User, OTP sent to your phone number.');
         } catch (Exception $e) {
-            return Helper::jsonErrorResponse('User registration failed', 500, [$e->getMessage()]);
+            return $this->error([$e->getMessage()], 'Registration failed');
         }
     }
-    public function VerifyEmail(Request $request)
+
+    /**
+     * Verify the phone number with OTP
+     */
+    public function verifyPhoneOtp(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
-            'otp'   => 'required|digits:4',
+            'mobile_number' => 'required|string|exists:users,mobile_number',
+            'otp' => 'required|digits:6',
         ]);
+
         try {
-            $user = User::where('email', $request->input('email'))->first();
+            $user = User::where('mobile_number', $request->mobile_number)->first();
 
-            //! Check if email has already been verified
-            if (!empty($user->otp_verified_at)) {
-                return  Helper::jsonErrorResponse('Email already verified.', 409);
+            // if ($user->otp_verified_at) {
+            //     return $this->error([], 'Phone number already verified.', 403);
+            // }
+
+            if ($user->otp !== $request->otp) {
+                return $this->error([], 'Invalid OTP.Please provide valid otp ', 403);
             }
 
-            if ((string)$user->otp !== (string)$request->input('otp')) {
-                return Helper::jsonErrorResponse('Invalid OTP code', 422);
-            }
-
-            //* Check if OTP has expired
             if (Carbon::parse($user->otp_expires_at)->isPast()) {
-                return Helper::jsonErrorResponse('OTP has expired. Please request a new OTP.', 422);
+                return $this->error([], 'OTP has expired.', 403);
             }
 
-            //* Verify the email
-            $user->otp_verified_at   = now();
-            $user->otp               = null;
-            $user->otp_expires_at    = null;
+            $user->otp_verified_at = now();
+            $user->otp = null;
+            $user->otp_expires_at = null;
             $user->save();
 
-            return Helper::jsonResponse(true, 'Email verification successful.', 200);
+            $token = JWTAuth::fromUser($user);
+            $user->token = $token;
+            $user->is_new_user = empty($user->first_name) || empty($user->last_name);
+
+            return $this->success($user, 'Phone verification successful.');
         } catch (Exception $e) {
-            return Helper::jsonErrorResponse($e->getMessage(), $e->getCode());
+            return $this->error([], $e->getMessage(), 500);
         }
     }
 
-    public function ResendOtp(Request $request)
+    /**
+     * Resend OTP to existing user
+     */
+    public function resendPhoneOtp(Request $request, TwilioService $twilio)
     {
-
-        $request->validate([
-            'email' => 'required|email|exists:users,email',
+        $validator = Validator::make($request->all(), [
+            'mobile_number' => 'required|string|exists:users,mobile_number',
         ]);
 
+        if ($validator->fails()) {
+            return $this->error([], $validator->errors()->first(), 422);
+        }
+
         try {
-            $user = User::where('email', $request->input('email'))->first();
+            $user = User::where('mobile_number', $request->input('mobile_number'))->first();
 
-            if (!$user) {
-                return Helper::jsonErrorResponse('User not found.', 404);
-            }
+            // if ($user->otp_verified_at) {
+            //     return $this->error([], 'Phone number already verified.', 409);
+            // }
 
-            if ($user->otp_verified_at) {
-                return Helper::jsonErrorResponse('Email already verified.', 409);
-            }
+            $otp = rand(100000, 999999);
+            $otpExpiresAt = Carbon::now()->addMinutes(10);
 
-            $newOtp               = rand(1000, 9999);
-            $otpExpiresAt         = Carbon::now()->addMinutes(60);
-            $user->otp            = $newOtp;
+            $user->otp = $otp;
             $user->otp_expires_at = $otpExpiresAt;
             $user->save();
 
-            //* Send the new OTP to the user's email
-            Mail::to($user->email)->send(new OtpMail($newOtp, $user, 'Verify Your Email Address'));
+            // $twilio->sendOtp($user->mobile_number, $otp);
 
-            return Helper::jsonResponse(true, 'A new OTP has been sent to your email.', 200);
+            return $this->success($user, 'OTP resent successfully.');
         } catch (Exception $e) {
-            return Helper::jsonErrorResponse($e->getMessage(), 200);
+            return $this->error([], $e->getMessage(), 500);
         }
     }
 }
