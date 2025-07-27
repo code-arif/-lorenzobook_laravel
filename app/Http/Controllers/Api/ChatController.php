@@ -269,7 +269,7 @@ class ChatController extends Controller
             return response()->json(['success' => false, 'message' => 'User not found or cannot chat with yourself', 'data' => [], 'code' => 200]);
         }
 
-        $room = Room::with(['userOne:id,name,email,avatar,last_activity_at', 'userTwo:id,name,email,avatar,last_activity_at'])
+        $room = Room::with(['userOne:id,first_name,email,cover,last_activity_at', 'userTwo:id,first_name,email,cover,last_activity_at'])
             ->where(function ($query) use ($receiver_id, $sender_id) {
                 $query->where('user_one_id', $receiver_id)->where('user_two_id', $sender_id);
             })->orWhere(function ($query) use ($receiver_id, $sender_id) {

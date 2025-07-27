@@ -43,7 +43,6 @@ class User extends Authenticatable implements JWTSubject
         'last_activity_at'
     ];
 
-
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -54,7 +53,10 @@ class User extends Authenticatable implements JWTSubject
         'remember_token',
     ];
 
-
+    protected $appends = [
+        'role',
+        'is_online'
+    ];
 
     /**
      * Get the attributes that should be cast.

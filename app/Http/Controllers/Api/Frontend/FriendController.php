@@ -55,4 +55,32 @@ class FriendController extends Controller
 
         return $this->success($friend, 'Friend add to contacts', 201);
     }
+
+
+
+    public function details($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return $this->error([], 'User  not found', 404);
+        }
+
+
+
+        $data = [
+            'id' => $user->id,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            'email' => $user->email,
+            'cover' => $user->cover,
+            'last_activity_at' => $user->last_activity_at,
+            'is_friend' => Friend::where('user_id', auth('api')->id())
+                ->where('friend_id', $id)
+                ->exists(),
+        ];
+
+
+        return $this->success($data, 'Friend details fetched successfully');
+    }
 }

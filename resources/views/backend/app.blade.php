@@ -22,10 +22,10 @@ $settings = \App\Models\Setting::first();
     <!-- Scripts -->
 
     @vite(['resources/js/app.js'])
-    
+
     @include('backend.partials.styles')
-    
-    
+
+
 </head>
 
 <body class="ltr app sidebar-mini">
@@ -47,7 +47,7 @@ $settings = \App\Models\Setting::first();
     </div>
     <!-- page -->
     @include('backend.partials.scripts')
-    
+
 </body>
 
 </html>

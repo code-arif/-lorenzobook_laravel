@@ -109,6 +109,9 @@ Route::middleware(['auth:api'])->controller(FriendController::class)->prefix('au
     Route::get('/list', 'list');
     Route::post('/send', 'send');
 
+    // friend details
+    Route::get('/details/{id}', 'details');
+
 });
 
 
