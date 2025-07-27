@@ -108,7 +108,7 @@
                 NProgress.done();
                 $('#userList').empty();
                 $.each(response.data.users, function(index, value) {
-                    let senderAvatar = value.avatar ? `{{ asset('${value.avatar}') }}` : "{{ asset('default/profile.jpg') }}";
+                    let senderAvatar = value.cover ? `{{ asset('${value.cover}') }}` : "{{ asset('default/profile.jpg') }}";
                     $('#userList').append(`
                         <a class="media new" href="javascript:void(0)" onclick="userChat(${value.id})">
                             <div class="main-img-user online">
@@ -117,7 +117,7 @@
                             </div>
                             <div class="media-body">
                                 <div class="media-contact-name">
-                                    <span>${value.name}</span>
+                                    <span>${value.first_name}</span>
                                 </div>
                                     <span class="time">${value.last_chat.short_text}</span>
                                 </div>
@@ -145,7 +145,7 @@
             success: function(response) {
                 NProgress.done();
                 $.each(response.data.users, function(index, value) {
-                    let senderAvatar = value.avatar ? `{{ asset('${value.avatar}') }}` : "{{ asset('default/profile.jpg') }}";
+                    let senderAvatar = value.cover ? `{{ asset('${value.cover}') }}` : "{{ asset('default/profile.jpg') }}";
                     $('#userList').append(`
                         <a class="media new" href="javascript:void(0)" onClick="userChat(${value.id})">
                             <div class="main-img-user online">
@@ -153,7 +153,7 @@
                             </div>
                             <div class="media-body">
                                 <div class="media-contact-name">
-                                    <span>${value.name}</span>
+                                    <span>${value.first_name}</span>
                                 </div>
                                 <span class="time">${value.email}</span>
                             </div>
@@ -176,7 +176,7 @@
                 NProgress.done();
                 $('#ChatContent').empty();
                 $('#ReceiverId').val(receiver_id);
-                $('#ReceiverName').text(response.data.receiver.name);
+                $('#ReceiverName').text(response.data.receiver.first_name);
                 $('#ReceiverRoll').text(response.data.receiver.role);
                 $('#RoomId').val(response.data.room.id);
                 window.sessionStorage.setItem('room_id', response.data.room.id);
@@ -187,8 +187,8 @@
                     $('#selectUser' + receiver_id).addClass('selected');
                 }
 
-                let receiverAvatar = response.data.receiver.avatar ? `{{ asset('${response.data.receiver.avatar}') }}` : "{{ asset('default/profile.jpg') }}";
-                let senderAvatar = response.data.sender.avatar ? `{{ asset('${response.data.sender.avatar}') }}` : "{{ asset('default/profile.jpg') }}";
+                let receiverAvatar = response.data.receiver.cover ? `{{ asset('${response.data.receiver.cover}') }}` : "{{ asset('default/profile.jpg') }}";
+                let senderAvatar = response.data.sender.cover ? `{{ asset('${response.data.sender.cover}') }}` : "{{ asset('default/profile.jpg') }}";
 
                 $('#ReceiverImage').html(`<img alt="avatar" src="${receiverAvatar}">`);
 
@@ -296,6 +296,6 @@
             userList();
         });
     });
-    
+
 </script>
 @endpush

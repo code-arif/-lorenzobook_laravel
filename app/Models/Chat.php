@@ -38,6 +38,8 @@ class Chat extends Model {
         'short_text',
         'type'
     ];
+    protected $with = ['sender.roles', 'receiver.roles'];
+
 
     public function getFileAttribute($value): ?string
     {

@@ -73,8 +73,8 @@ Route::group(['middleware' =>'auth:api'], function ($router) {
     Route::get('/me', [UserController::class, 'me']);
     Route::post('/update-profile', [UserController::class, 'updateProfile']);
     // Route::post('/update-avatar', [UserController::class, 'updateAvatar']);
-    
-    
+
+
     Route::get('/user/list', [UserController::class, 'user_list']);
 });
 
@@ -108,7 +108,7 @@ Route::middleware(['auth:api'])->controller(FriendController::class)->prefix('au
 
     Route::get('/list', 'list');
     Route::post('/send', 'send');
-   
+
 });
 
 
@@ -130,6 +130,8 @@ Route::middleware(['auth:api'])->controller(ChatController::class)->prefix('auth
     Route::get('/search', 'search');
     Route::get('/seen/all/{receiver_id}', 'seenAll');
     Route::get('/seen/single/{chat_id}', 'seenSingle');
+
+
 });
 
 
@@ -147,7 +149,7 @@ Route::middleware(['auth:api'])->controller(GroupController::class)->prefix('aut
 
     Route::post('/leave/member/{group_id}', 'leaveMember');
 
-    
+
     Route::post('/mute/member/{group_id}', 'muteMember');
     Route::post('/unmute/member/{group_id}', 'unmuteMember');
     Route::post('/ban/member/{group_id}', 'banMember');
@@ -155,7 +157,7 @@ Route::middleware(['auth:api'])->controller(GroupController::class)->prefix('aut
 
     // New routes
     Route::patch('/promote/member/{group_id}/{user_id}', 'promoteMember');
-    Route::patch('/demote/member/{group_id}/{user_id}', 'demoteMember'); 
+    Route::patch('/demote/member/{group_id}/{user_id}', 'demoteMember');
 });
 
 

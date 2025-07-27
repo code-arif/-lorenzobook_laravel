@@ -22,9 +22,9 @@ class ChatController extends Controller
     public function list(): JsonResponse
     {
         $authUser = Auth::user();
-        
+
         // Fetch users who are connected as senders or receivers with the authenticated user
-        $users = User::select('id', 'name', 'email', 'avatar', 'last_activity_at')
+        $users = User::select('id', 'first_name', 'email', 'cover', 'last_activity_at')
             ->whereHas('senders', function ($query) use ($authUser) {
                 $query->where('receiver_id', $authUser->id);
             })
@@ -73,9 +73,9 @@ class ChatController extends Controller
         $user_id = Auth::id();
 
         $keyword = $request->get('keyword');
-        $users = User::select('id', 'name', 'email', 'avatar', 'last_activity_at')
+        $users = User::select('id', 'first_name', 'email', 'cover', 'last_activity_at')
         ->where('id', '!=', $user_id)
-        ->where('name', 'LIKE', "%{$keyword}%")->orWhere('email', 'LIKE', "%{$keyword}%")
+        ->where('first_name', 'LIKE', "%{$keyword}%")->orWhere('email', 'LIKE', "%{$keyword}%")
         ->get();
 
         $data = [
@@ -101,7 +101,7 @@ class ChatController extends Controller
         $sender_id = Auth::id();
 
         Chat::where('receiver_id', $sender_id)->where('sender_id', $receiver_id)->update(['status' => 'read']);
-        
+
         $chat = Chat::query()
             ->where(function ($query) use ($receiver_id, $sender_id) {
                 $query->where('sender_id', $sender_id)->where('receiver_id', $receiver_id);
@@ -109,10 +109,10 @@ class ChatController extends Controller
             ->orWhere(function ($query) use ($receiver_id, $sender_id) {
                 $query->where('sender_id', $receiver_id)->where('receiver_id', $sender_id);
             })
-            ->with([ 
-                'sender:id,name,email,avatar,last_activity_at', 
-                'receiver:id,name,email,avatar,last_activity_at',
-                'room:id,user_one_id,user_two_id' 
+            ->with([
+                'sender:id,first_name,email,cover,last_activity_at',
+                'receiver:id,first_name,email,cover,last_activity_at',
+                'room:id,user_one_id,user_two_id'
             ])
             ->orderBy('created_at')
             ->limit(50)
@@ -132,8 +132,8 @@ class ChatController extends Controller
         }
 
         $data = [
-            'receiver' => User::select('id', 'name', 'email', 'avatar', 'last_activity_at')->where('id', $receiver_id)->first(),
-            'sender' => User::select('id', 'name', 'email', 'avatar', 'last_activity_at')->where('id', $sender_id)->first(),
+            'receiver' => User::select('id', 'first_name', 'email', 'cover', 'last_activity_at')->where('id', $receiver_id)->first(),
+            'sender' => User::select('id', 'first_name', 'email', 'cover', 'last_activity_at')->where('id', $sender_id)->first(),
             'room' => $room,
             'chat' => $chat
         ];
@@ -200,8 +200,8 @@ class ChatController extends Controller
 
         //* Load the sender's information
         $chat->load([
-            'sender:id,name,email,avatar,last_activity_at',
-            'receiver:id,name,email,avatar,last_activity_at', 
+            'sender:id,first_name,email,cover,last_activity_at',
+            'receiver:id,first_name,email,cover,last_activity_at',
             'room:id,user_one_id,user_two_id'
         ]);
 
@@ -269,7 +269,7 @@ class ChatController extends Controller
             return response()->json(['success' => false, 'message' => 'User not found or cannot chat with yourself', 'data' => [], 'code' => 200]);
         }
 
-        $room = Room::with(['userOne:id,name,email,avatar,last_activity_at', 'userTwo:id,name,email,avatar,last_activity_at'])
+        $room = Room::with(['userOne:id,first_name,email,cover,last_activity_at', 'userTwo:id,first_name,email,cover,last_activity_at'])
         ->where(function ($query) use ($receiver_id, $sender_id) {
             $query->where('user_one_id', $receiver_id)->where('user_two_id', $sender_id);
         })->orWhere(function ($query) use ($receiver_id, $sender_id) {

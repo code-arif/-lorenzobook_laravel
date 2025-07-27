@@ -18,7 +18,7 @@ function getCommonData()
     $common = CMS::where('page', PageEnum::COMMON)->where('status', 'active');
     foreach (SectionEnum::getCommon() as $key => $section) {
         $cms[$key] = (clone $common)->where('section', $key)->latest()->take($section['item'])->{$section['type']}();
-    } 
+    }
     return $cms;
 }
 

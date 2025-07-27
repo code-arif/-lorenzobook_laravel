@@ -113,8 +113,10 @@ class ChatController extends Controller
                 'receiver:id,first_name,last_name,mobile_number,cover,last_activity_at',
                 'room:id,user_one_id,user_two_id'
             ])
-            ->orderBy('created_at')
-            ->paginate(50);
+             ->orderBy('created_at')
+            ->limit(50)
+            ->get();
+
 
         $room = Room::where(function ($query) use ($receiver_id, $sender_id) {
             $query->where('user_one_id', $receiver_id)->where('user_two_id', $sender_id);
