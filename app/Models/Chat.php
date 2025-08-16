@@ -79,4 +79,8 @@ class Chat extends Model {
     public function room(): BelongsTo {
         return $this->belongsTo(Room::class);
     }
+
+    public function group(): BelongsTo {
+        return $this->belongsTo(Group::class , 'room_id', 'id');
+    }
 }

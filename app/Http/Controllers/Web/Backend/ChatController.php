@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Web\Backend;
 
-use App\Models\Room;
 use App\Models\Chat;
+use App\Models\Room;
 use App\Models\User;
-use App\Events\MessageSendEvent;
 use App\Helpers\Helper;
-use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Events\MessageSendEvent;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Events\GroupMessageSentEvent;
 use Illuminate\Support\Facades\Validator;
 
 class ChatController extends Controller
@@ -204,6 +205,9 @@ class ChatController extends Controller
             'receiver:id,first_name,email,cover,last_activity_at',
             'room:id,user_one_id,user_two_id'
         ]);
+
+        broadcast(new GroupMessageSentEvent($chat))->toOthers();
+
 
         broadcast(new MessageSendEvent($chat))->toOthers();
 

@@ -15,7 +15,7 @@ class FriendController extends Controller
 
     public function list(){
 
-        $friends = Friend::with('user')->where('user_id', auth('api')->user()->id)->get() ;
+        $friends = Friend::with('friend')->where('user_id', auth('api')->user()->id)->get() ;
 
         return $this->success($friends, 'Friend list fetched successfully');
 

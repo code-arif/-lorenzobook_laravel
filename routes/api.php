@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\FirebaseTokenController;
 use App\Http\Controllers\Api\Frontend\categoryController;
 use App\Http\Controllers\Api\Frontend\FaqController;
 use App\Http\Controllers\Api\Frontend\FriendController;
+use App\Http\Controllers\Api\Frontend\GroupChatController;
 use App\Http\Controllers\Api\Frontend\HomeController;
 use App\Http\Controllers\Api\Frontend\ImageController;
 use App\Http\Controllers\Api\Frontend\PostController;
@@ -133,6 +134,23 @@ Route::middleware(['auth:api'])->controller(ChatController::class)->prefix('auth
     Route::get('/search', 'search');
     Route::get('/seen/all/{receiver_id}', 'seenAll');
     Route::get('/seen/single/{chat_id}', 'seenSingle');
+
+
+});
+
+
+// group chat manage
+Route::middleware(['auth:api'])->controller(GroupChatController::class)->prefix('group/chat')->group(function () {
+
+    // Route::get('/list', 'list');
+    Route::post('/send/{group_id}', 'sendGroupMessage');
+    Route::get('/get-message/{group_id}', 'getGroupMessages');
+
+
+    // Route::get('/room/{receiver_id}', 'room');
+    // Route::get('/search', 'search');
+    // Route::get('/seen/all/{receiver_id}', 'seenAll');
+    // Route::get('/seen/single/{chat_id}', 'seenSingle');
 
 
 });

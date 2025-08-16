@@ -15,6 +15,7 @@ class MessageSendEvent implements ShouldBroadcastNow {
 
     public function __construct($data) {
         $this->data = $data;
+
     }
 
     public function broadcastOn(): array {

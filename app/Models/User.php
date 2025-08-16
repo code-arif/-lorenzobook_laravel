@@ -1,14 +1,13 @@
 <?php
-
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Tymon\JWTAuth\Contracts\JWTSubject;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -40,7 +39,7 @@ class User extends Authenticatable implements JWTSubject
         'otp',
         'cover',
         'otp_expires_at',
-        'last_activity_at'
+        'last_activity_at',
     ];
 
     /**
@@ -54,8 +53,8 @@ class User extends Authenticatable implements JWTSubject
     ];
 
     protected $appends = [
-        'role',
-        'is_online'
+
+        'is_online',
     ];
 
     /**
@@ -67,23 +66,32 @@ class User extends Authenticatable implements JWTSubject
     {
         return [
             'otp_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password'        => 'hashed',
         ];
     }
 
-    public function getCoverAttribute($value): string | null
+    // public function getCoverAttribute($value): string | null
+    // {
+    //     if (filter_var($value, FILTER_VALIDATE_URL)) {
+    //         return $value;
+    //     }
+    //     // Check if the request is an API request
+    //     if (request()->is('api/*') && ! empty($value)) {
+    //         // Return the full URL for API requests
+    //         return url($value);
+    //     }
+
+    //     // Return only the path for web requests
+    //     return $value;
+    // }
+
+    public function getCoverAttribute($value): ?string
     {
         if (filter_var($value, FILTER_VALIDATE_URL)) {
             return $value;
         }
-        // Check if the request is an API request
-        if (request()->is('api/*') && !empty($value)) {
-            // Return the full URL for API requests
-            return url($value);
-        }
 
-        // Return only the path for web requests
-        return $value;
+        return $value ? url($value) : null;
     }
 
     public function getIsOnlineAttribute()
@@ -93,7 +101,7 @@ class User extends Authenticatable implements JWTSubject
 
     public function getRoleAttribute()
     {
-        return  $this->getRoleNames()->first();
+        return $this->getRoleNames()->first();
     }
 
     public function firebaseTokens()
@@ -137,7 +145,6 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Post::class);
     }
 
-
     // group model relation
     public function groups()
     {
@@ -150,10 +157,9 @@ class User extends Authenticatable implements JWTSubject
     public function channels()
     {
         return $this->belongsToMany(Channel::class, 'channel_members')
-            ->withPivot('role', 'joined_at', 'left_at', 'is_active')
+            ->withPivot('role', 'joined_at', 'left_at')
             ->withTimestamps();
     }
-
 
     // get the users you have added
     public function friends()
@@ -166,4 +172,17 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->belongsToMany(User::class, 'friends', 'friend_id', 'user_id');
     }
+
+    // chats
+    public function chats()
+    {
+        return $this->hasMany(Chat::class, 'sender_id')->orWhere('receiver_id', $this->id);
+    }
+
+    // rooms
+    public function rooms()
+    {
+        return $this->hasMany(Room::class, 'user_one_id')->orWhere('user_two_id', $this->id);
+    }
+
 }

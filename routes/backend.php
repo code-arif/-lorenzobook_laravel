@@ -10,6 +10,7 @@ use App\Http\Controllers\Web\Backend\ContactController;
 use App\Http\Controllers\Web\Backend\CategoryController;
 use App\Http\Controllers\Web\Backend\UserListController;
 use App\Http\Controllers\Web\Backend\DashboardController;
+use App\Http\Controllers\Web\Backend\GroupChatController;
 use App\Http\Controllers\Web\Backend\GroupListController;
 use App\Http\Controllers\Web\Backend\SocialLinkController;
 use App\Http\Controllers\Web\Backend\SubscriberController;
@@ -154,6 +155,14 @@ Route::controller(ChatController::class)->prefix('chat')->name('chat.')->group(f
     Route::get('/search', 'search')->name('search');
     Route::get('/seen/all/{receiver_id}', 'seenAll');
     Route::get('/seen/single/{chat_id}', 'seenSingle');
+});
+
+Route::controller(GroupChatController::class)->prefix('chat/group')->name('group-chat.')->group(function () {
+    Route::get('/', 'index')->name('index');
+    Route::get('/list', 'list')->name('list');
+    Route::get('/search', 'search')->name('search');
+    Route::get('/messages/{group_id}', 'messages')->name('messages');
+    Route::post('/send/{group_id}', 'sendMessage')->name('send');
 });
 
 

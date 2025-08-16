@@ -1,12 +1,10 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
 class Group extends Model
 {
-
 
     protected $fillable = [
         'name',
@@ -20,6 +18,14 @@ class Group extends Model
         'updated_at' => 'datetime',
     ];
 
+    public function getImageUrlAttribute($value): ?string
+    {
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            return $value;
+        }
+
+        return $value ? url($value) : null;
+    }
 
     // members
     // Group.php
@@ -31,9 +37,6 @@ class Group extends Model
             ->withPivot('role', 'joined_at')
             ->withTimestamps();
     }
-
-
-
 
     public function createdBy()
     {
