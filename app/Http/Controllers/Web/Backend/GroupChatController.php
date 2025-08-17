@@ -199,6 +199,8 @@ class GroupChatController extends Controller
                 $query->where('user_id', $sender_id);
             })->first();
 
+
+
         if (!$group) {
             return response()->json([
                 'success' => false,

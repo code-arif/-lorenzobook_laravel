@@ -16,7 +16,8 @@ class Chat extends Model {
         'receiver_id',
         'text',
         'file',
-        'room_id'
+        'room_id',
+        'group_id'
     ];
 
    /*  protected $hidden = [
@@ -81,6 +82,6 @@ class Chat extends Model {
     }
 
     public function group(): BelongsTo {
-        return $this->belongsTo(Group::class , 'room_id', 'id');
+        return $this->belongsTo(Group::class , 'group_id', 'id');
     }
 }

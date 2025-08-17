@@ -41,6 +41,7 @@ class GroupChatController extends Controller
             ->whereHas('members', function ($query) use ($sender_id) {
                 $query->where('user_id', $sender_id);
             })->first();
+        // dd($group);
 
         if (! $group) {
             return response()->json([
@@ -61,7 +62,7 @@ class GroupChatController extends Controller
             'receiver_id' => null,
             'text'        => $request->text,
             'file'        => $file,
-            'room_id'     => $group->id,
+            'group_id'     => $group->id,
             'status'      => 'sent',
         ]);
 
