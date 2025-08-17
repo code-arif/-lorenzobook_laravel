@@ -229,8 +229,8 @@ class GroupChatController extends Controller
         $group->update(['last_activity_at' => now()]);
 
         // Broadcast the message
-        broadcast(new GroupMessageSentEvent($chat))->toOthers();
-        // broadcast(new MessageSendEvent($chat))->toOthers();
+        // broadcast(new GroupMessageSentEvent($chat))->toOthers();
+        broadcast(new MessageSendEvent($chat))->toOthers();
 
         $data = [
             'chat' => $chat,
