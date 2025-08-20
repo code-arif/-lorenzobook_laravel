@@ -1,14 +1,12 @@
 <?php
-
 namespace App\Events;
 
 use App\Models\Chat;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
-
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
 
 class GroupMessageSentEvent implements ShouldBroadcastNow
 {
@@ -16,30 +14,15 @@ class GroupMessageSentEvent implements ShouldBroadcastNow
 
     public $chat;
 
-    public function __construct(Chat $chat)
+    public function __construct($chat)
     {
         $this->chat = $chat;
-
-        // dd($chat);
     }
 
-    public function broadcastOn()
-    {
-        // Use the group room ID as the channel name
-        return new PrivateChannel('chat-room.' . $this->chat->room_id);
-    }
-
-    public function broadcastWith()
+    public function broadcastOn(): array
     {
         return [
-            'data' => [
-                'id' => $this->chat->id,
-                'sender_id' => $this->chat->sender_id,
-                'text' => $this->chat->text,
-                'file' => $this->chat->file,
-                'created_at' => $this->chat->created_at,
-                'sender' => $this->chat->sender,
-            ]
+            new PrivateChannel("group-chat.{$this->chat->group_id}"),
         ];
     }
 }

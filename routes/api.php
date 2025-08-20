@@ -142,15 +142,11 @@ Route::middleware(['auth:api'])->controller(ChatController::class)->prefix('auth
 // group chat manage
 Route::middleware(['auth:api'])->controller(GroupChatController::class)->prefix('group/chat')->group(function () {
 
-    // Route::get('/list', 'list');
+
     Route::post('/send/{group_id}', 'sendGroupMessage');
     Route::get('/get-message/{group_id}', 'getGroupMessages');
 
 
-    // Route::get('/room/{receiver_id}', 'room');
-    // Route::get('/search', 'search');
-    // Route::get('/seen/all/{receiver_id}', 'seenAll');
-    // Route::get('/seen/single/{chat_id}', 'seenSingle');
 
 
 });
