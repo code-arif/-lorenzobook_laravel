@@ -36,7 +36,7 @@ class GroupChatController extends Controller
 
         $sender_id = auth('api')->id();
 
-        // Check if group exists and user is a member
+        // check if group exists and user is a member
         $group = Group::where('id', $group_id)
             ->whereHas('members', function ($query) use ($sender_id) {
                 $query->where('user_id', $sender_id);
@@ -95,7 +95,7 @@ class GroupChatController extends Controller
         // Verify group existence and membership
         $group = Group::where('id', $group_id)
             ->whereHas('members', function ($query) use ($user_id) {
-                $query->where('user_id', $user_id)->where('is_active', true);
+                $query->where('user_id', $user_id);
             })->first();
 
         if (! $group) {
@@ -107,18 +107,14 @@ class GroupChatController extends Controller
             ]);
         }
 
-                                                    // Pagination parameters
-        $perPage = $request->input('per_page', 50); // Default 50 messages
-        $page    = $request->input('page', 1);
 
-        // Fetch messages for the group
-        $chats = Chat::where('room_id', $group_id)
+        $chats = Chat::where('group_id', $group_id)
             ->with([
                 'sender:id,first_name,last_name,mobile_number,cover,last_activity_at',
                 'room:id,name,image_url',
             ])
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage, ['*'], 'page', $page);
+            ->orderBy('created_at', 'desc')->get();
+
 
         // Prepare group details
         $groupData = [
@@ -131,13 +127,8 @@ class GroupChatController extends Controller
         // Prepare response data
         $data = [
             'group'      => $groupData,
-            'messages'   => $chats->items(), // Current page messages
-            'pagination' => [
-                'current_page' => $chats->currentPage(),
-                'last_page'    => $chats->lastPage(),
-                'per_page'     => $chats->perPage(),
-                'total'        => $chats->total(),
-            ],
+            'messages'   => $chats, // Current page messages
+
         ];
 
         return response()->json([
