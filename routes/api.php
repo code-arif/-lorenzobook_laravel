@@ -204,8 +204,9 @@ Route::middleware(['auth:api'])->controller(ChannelManageController::class)->pre
 
 
 
+Route::post('/save-fcm-token', [FirebaseTokenController::class, 'test_token_store']);
 
-
+Route::post('/send-call', [FirebaseTokenController::class, 'sendCall']);
 
 
 

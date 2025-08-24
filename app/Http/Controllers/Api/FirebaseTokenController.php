@@ -1,15 +1,17 @@
 <?php
-
 namespace App\Http\Controllers\Api;
 
-use App\Helpers\Helper;
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\FirebaseTokens;
-use App\Models\User;
 use Exception;
+use App\Models\User;
+use App\Helpers\Helper;
+use App\Models\FcmToken;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Services\PushService;
+use App\Models\FirebaseTokens;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
-
 
 class FirebaseTokenController extends Controller
 {
@@ -18,17 +20,17 @@ class FirebaseTokenController extends Controller
     {
         $user = User::find(auth('api')->user()->id);
         if ($user && $user->firebaseTokens) {
-            $notifyData = ['title' => "Payment Failed", 'body'  => "test body", 'icon'  => config('settings.logo')];
+            $notifyData = ['title' => "Payment Failed", 'body' => "test body", 'icon' => config('settings.logo')];
             foreach ($user->firebaseTokens as $firebaseToken) {
                 Helper::sendNotifyMobile($firebaseToken->token, $notifyData);
             }
         }
 
         return response()->json([
-            'status' => true,
+            'status'  => true,
             'message' => 'Token saved successfully',
-            'data' => $user->firebaseTokens,
-            'code' => 200,
+            'data'    => $user->firebaseTokens,
+            'code'    => 200,
         ], 200);
     }
 
@@ -39,7 +41,7 @@ class FirebaseTokenController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'token' => 'required|string',
+            'token'     => 'required|string',
             'device_id' => 'required|string',
         ]);
 
@@ -54,25 +56,25 @@ class FirebaseTokenController extends Controller
         }
 
         try {
-            $data = new FirebaseTokens();
-            $data->user_id = auth('api')->user()->id;
-            $data->token = $request->token;
+            $data            = new FirebaseTokens();
+            $data->user_id   = auth('api')->user()->id;
+            $data->token     = $request->token;
             $data->device_id = $request->device_id;
-            $data->status = "active";
+            $data->status    = "active";
             $data->save();
 
             return response()->json([
-                'status' => true,
+                'status'  => true,
                 'message' => 'Token saved successfully',
-                'data' => $data,
-                'code' => 200,
+                'data'    => $data,
+                'code'    => 200,
             ], 200);
         } catch (Exception $e) {
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'No records found',
-                'code' => 418,
-                'data' => [],
+                'code'    => 418,
+                'data'    => [],
             ], 418);
         }
     }
@@ -90,22 +92,22 @@ class FirebaseTokenController extends Controller
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->first()], 400);
         }
-        $user_id = auth('api')->user()->id;
+        $user_id   = auth('api')->user()->id;
         $device_id = $request->device_id;
-        $data = FirebaseTokens::where('user_id', $user_id)->where('device_id', $device_id)->first();
-        if (!$data) {
+        $data      = FirebaseTokens::where('user_id', $user_id)->where('device_id', $device_id)->first();
+        if (! $data) {
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'No records found',
-                'code' => 404,
-                'data' => [],
+                'code'    => 404,
+                'data'    => [],
             ], 404);
         }
         return response()->json([
-            'status' => true,
+            'status'  => true,
             'message' => 'Token fetched successfully',
-            'data' => $data,
-            'code' => 200,
+            'data'    => $data,
+            'code'    => 200,
         ], 200);
     }
 
@@ -127,17 +129,67 @@ class FirebaseTokenController extends Controller
         if ($user) {
             $user->delete();
             return response()->json([
-                'status' => true,
+                'status'  => true,
                 'message' => 'Token deleted successfully',
-                'code' => 200,
+                'code'    => 200,
             ], 200);
         } else {
             return response()->json([
-                'status' => false,
+                'status'  => false,
                 'message' => 'No records found',
-                'code' => 404,
+                'code'    => 404,
             ], 404);
         }
     }
-    
+
+    // test token store
+    public function test_token_store(Request $request)
+    {
+        $request->validate([
+            'user_id'   => 'required|string',
+            'fcm_token' => 'required|string',
+        ]);
+
+        FcmToken::updateOrCreate(
+            ['user_id' => $request->user_id],
+            ['fcm_token' => $request->fcm_token]
+        );
+
+        return response()->json(['message' => 'Token saved']);
+    }
+
+    public function sendCall(Request $request, PushService $push)
+    {
+        $request->validate([
+            'receiver_id' => 'required',
+            'caller_id'   => 'required',
+            'caller_name' => 'required',
+            'call_type'   => 'required|in:video,voice',
+        ]);
+
+        $tokenRow = FcmToken::where('user_id', $request->receiver_id)->first();
+        if (! $tokenRow) {
+            return response()->json(['message' => 'Receiver FCM token not found'], 404);
+        }
+
+        $data = [
+            'zego'        => 'true',
+            'call_id'     => (string) Str::uuid(),
+            'caller_id'   => $request->caller_id,
+            'caller_name' => $request->caller_name,
+            'call_type'   => $request->call_type,
+        ];
+
+        try {
+            $resp = $push->toToken($tokenRow->fcm_token, $data, 'Incoming Call', "{$request->caller_name} is calling");
+            return response()->json(['status' => true, 'result' => $resp]);
+        } catch (\Throwable $e) {
+            // If the token is invalid/unregistered, clean it up
+            if (str_contains($e->getMessage(), 'UNREGISTERED')) {
+                $tokenRow->delete();
+            }
+            return response()->json(['status' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
 }
