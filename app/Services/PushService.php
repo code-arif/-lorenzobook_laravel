@@ -8,22 +8,36 @@ use Kreait\Firebase\Messaging\Notification;
 
 class PushService
 {
-    public function __construct(private Messaging $messaging)
-    {}
+    public function __construct(private Messaging $messaging) {}
 
     public function toToken(string $token, array $data = [], ?string $title = null, ?string $body = null)
     {
-        $message = CloudMessage::withTarget('token', $token)
-            ->withNotification(Notification::create($title ?? '', $body ?? ''))
-            ->withData($data)
-            ->withAndroid([
+        $payload = [
+            'token' => $token,
+            'notification' => [
+                'title' => $title ?? '',
+                'body'  => $body ?? '',
+            ],
+            'data' => array_map('strval', $data),
+            'android' => [
                 'priority' => 'high',
                 'ttl'      => '4500s',
-            ])
-            ->withApns([
+                'notification' => [
+                    'sound' => 'default',
+                    'channel_id' => 'incoming_calls',
+                ],
+            ],
+            'apns' => [
                 'headers' => ['apns-priority' => '10'],
-                'payload' => ['aps' => ['sound' => 'default']],
-            ]);
+                'payload' => [
+                    'aps' => [
+                        'sound' => 'default',
+                    ],
+                ],
+            ],
+        ];
+
+        $message = CloudMessage::fromArray($payload);
 
         return $this->messaging->send($message);
     }

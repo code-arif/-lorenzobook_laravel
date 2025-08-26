@@ -1,17 +1,17 @@
 <?php
 namespace App\Http\Controllers\Api;
 
-use Exception;
-use App\Models\User;
 use App\Helpers\Helper;
-use App\Models\FcmToken;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request;
-use App\Services\PushService;
-use App\Models\FirebaseTokens;
 use App\Http\Controllers\Controller;
+use App\Models\FcmToken;
+use App\Models\FirebaseTokens;
+use App\Models\User;
+use App\Services\PushService;
+use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class FirebaseTokenController extends Controller
 {
@@ -172,23 +172,40 @@ class FirebaseTokenController extends Controller
             return response()->json(['message' => 'Receiver FCM token not found'], 404);
         }
 
+
+        $callId     = (string) Str::uuid();
+
         $data = [
             'zego'        => 'true',
-            'call_id'     => (string) Str::uuid(),
+            'call_id'     => $callId,
             'caller_id'   => $request->caller_id,
             'caller_name' => $request->caller_name,
             'call_type'   => $request->call_type,
+            'resource_id' => 'lorenzobook',
         ];
 
         try {
-            $resp = $push->toToken($tokenRow->fcm_token, $data, 'Incoming Call', "{$request->caller_name} is calling");
-            return response()->json(['status' => true, 'result' => $resp]);
+            $resp = $push->toToken(
+                $tokenRow->fcm_token,
+                $data,
+                'Incoming Call',
+                "{$request->caller_name} is calling"
+            );
+
+            return response()->json([
+                'status'      => true,
+                'call_id'     => $callId,
+
+                'result'      => $resp,
+            ]);
         } catch (\Throwable $e) {
-            // If the token is invalid/unregistered, clean it up
             if (str_contains($e->getMessage(), 'UNREGISTERED')) {
                 $tokenRow->delete();
             }
-            return response()->json(['status' => false, 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'status' => false,
+                'error'  => $e->getMessage(),
+            ], 500);
         }
     }
 
