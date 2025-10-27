@@ -138,13 +138,13 @@ class GroupChatController extends Controller
         $page = $request->input('page', 1);
 
         // Fetch messages
-        $chats = Chat::where('room_id', $group_id)
+        $chats = Chat::where('group_id', $group_id)
             ->with(['sender:id,first_name,email,cover,last_activity_at'])
             ->orderBy('created_at')
             ->paginate($perPage, ['*'], 'page', $page);
 
         // Mark unread messages as read for the authenticated user
-        Chat::where('room_id', $group_id)
+        Chat::where('group_id', $group_id)
             ->where('sender_id', '!=', $authUser->id)
             ->where('status', 'sent')
             ->update(['status' => 'read']);
@@ -232,7 +232,7 @@ class GroupChatController extends Controller
 
         // Broadcast the message
         // broadcast(new GroupMessageSentEvent($chat))->toOthers();
-        broadcast(new MessageSendEvent($chat))->toOthers();
+        broadcast(new GroupMessageSentEvent($chat))->toOthers();
 
         $data = [
             'chat' => $chat,

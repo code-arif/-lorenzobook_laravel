@@ -221,8 +221,8 @@ class GroupController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'member_ids' => 'required|array',
-                'member_ids.*' => 'exists:users,id'
+                'member_id' => 'required',
+
             ]
         );
 
@@ -231,25 +231,27 @@ class GroupController extends Controller
         }
 
         // check member_ids not exists in group members
-        $notExists = [];
-        foreach ($request->member_ids as $memberId) {
-            if (!$group->members->contains('id', $memberId)) {
-                $notExists[] = $memberId;
-            }
-        }
-        if (count($notExists) > 0) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Member(s) not found in group members.',
-                'data' => $notExists,
+        // $notExists = [];
+        // foreach ($request->member_ids as $memberId) {
+        //     if (!$group->members->contains('id', $memberId)) {
+        //         $notExists[] = $memberId;
+        //     }
+        // }
+        // if (count($notExists) > 0) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => 'Member(s) not found in group members.',
+        //         'data' => $notExists,
 
-            ], 422);
-        }
+        //     ], 422);
+        // }
 
 
-        foreach ($request->member_ids as $memberId) {
-            $group->members()->detach($memberId);
-        }
+        // foreach ($request->member_ids as $memberId) {
+        //     $group->members()->detach($memberId);
+        // }
+
+
 
         return response()->json([
             'status' => true,
@@ -326,13 +328,13 @@ class GroupController extends Controller
 
 
 
-    // leave member     
+    // leave member
 
     public function leaveMember(Request $request, $group_id)
     {
         $user = User::find($request->member_id);
 
-        
+
         $group = Group::findOrFail($group_id);
 
         if (!$group) {
@@ -359,6 +361,6 @@ class GroupController extends Controller
     }
 
 
-    // ban users 
-    
+    // ban users
+
 }

@@ -13,7 +13,7 @@ class LogoutController extends Controller
     public $select;
     public function __construct()
     {
-        $this->select = ['id', 'name', 'email', 'avatar'];   
+        $this->select = ['id', 'name', 'email', 'avatar'];
     }
     public function logout()
     {
@@ -26,7 +26,7 @@ class LogoutController extends Controller
                 }
 
                 Auth::logout('api');
-                
+
                 return Helper::jsonResponse(true, 'Logged out successfully. Token revoked.', 200);
             } else {
                 return Helper::jsonErrorResponse( 'User not authenticated', 401);

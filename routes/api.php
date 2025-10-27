@@ -47,6 +47,8 @@ Route::middleware(['auth:api'])->controller(PostController::class)->prefix('auth
     Route::delete('/delete/{id}', 'destroy');
 });
 
+
+
 Route::get('/posts', [PostController::class, 'posts']);
 Route::get('/post/show/{post_id}', [PostController::class, 'post']);
 
@@ -77,6 +79,11 @@ Route::group(['middleware' =>'auth:api'], function ($router) {
 
 
     Route::get('/user/list', [UserController::class, 'user_list']);
+
+
+    Route::get('/logout', [LogoutController::class, 'logout']);
+
+
 });
 
 /*

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/',[HomeController::class, 'index'])->name('home');
+Route::get('/policies/term-conditions',[HomeController::class, 'policies'])->name('privacy.policies');
 
 Route::get('/post',[HomeController::class, 'index'])->name('post.index');
 Route::get('/post/show/{slug}',[HomeController::class, 'post'])->name('post.show');

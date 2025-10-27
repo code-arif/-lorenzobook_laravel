@@ -111,7 +111,7 @@ class GroupChatController extends Controller
         $chats = Chat::where('group_id', $group_id)
             ->with([
                 'sender:id,first_name,last_name,mobile_number,cover,last_activity_at',
-                'room:id,name,image_url',
+                'group:id,name,image_url',
             ])
             ->orderBy('created_at', 'desc')->get();
 
