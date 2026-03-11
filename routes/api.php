@@ -71,7 +71,7 @@ Route::group(['middleware' => 'guest:api'], function ($router) {
     Route::post('/resend-otp', [RegisterController::class, 'resendPhoneOtp']);
 });
 
-Route::group(['middleware' =>'auth:api'], function ($router) {
+Route::group(['middleware' => 'auth:api'], function ($router) {
 
     Route::get('/me', [UserController::class, 'me']);
     Route::post('/update-profile', [UserController::class, 'updateProfile']);
@@ -82,8 +82,6 @@ Route::group(['middleware' =>'auth:api'], function ($router) {
 
 
     Route::get('/logout', [LogoutController::class, 'logout']);
-
-
 });
 
 /*
@@ -119,7 +117,6 @@ Route::middleware(['auth:api'])->controller(FriendController::class)->prefix('au
 
     // friend details
     Route::get('/details/{id}', 'details');
-
 });
 
 
@@ -133,7 +130,6 @@ Route::middleware(['auth:api'])->controller(FriendController::class)->prefix('au
 
 
 Route::middleware(['auth:api'])->controller(ChatController::class)->prefix('auth/chat')->group(function () {
-
     Route::get('/list', 'list');
     Route::post('/send/{receiver_id}', 'send');
     Route::get('/conversation/{receiver_id}', 'conversation');
@@ -141,47 +137,35 @@ Route::middleware(['auth:api'])->controller(ChatController::class)->prefix('auth
     Route::get('/search', 'search');
     Route::get('/seen/all/{receiver_id}', 'seenAll');
     Route::get('/seen/single/{chat_id}', 'seenSingle');
-
-
 });
 
 
 // group chat manage
-Route::middleware(['auth:api'])->controller(GroupChatController::class)->prefix('group/chat')->group(function () {
+Route::middleware('auth:api')->prefix('auth/group')->group(function () {
+    // Group CRUD
+    Route::get('/list', [GroupController::class, 'list']);
+    Route::post('/create', [GroupController::class, 'create']);
+    Route::get('/show/{group_id}', [GroupController::class, 'show']);
+    Route::post('/update/{group_id}', [GroupController::class, 'update']);
+    Route::delete('/delete/{group_id}', [GroupController::class, 'destroy']);
 
-
-    Route::post('/send/{group_id}', 'sendGroupMessage');
-    Route::get('/get-message/{group_id}', 'getGroupMessages');
-
-
-
-
+    // Member Management
+    Route::post('/member/add/{group_id}', [GroupController::class, 'addMember']);
+    Route::post('/member/remove/{group_id}', [GroupController::class, 'removeMember']);
+    Route::post('/member/leave/{group_id}', [GroupController::class, 'leaveMember']);
+    Route::post('/member/mute/{group_id}', [GroupController::class, 'muteMember']);
+    Route::post('/member/unmute/{group_id}', [GroupController::class, 'unmuteMember']);
+    Route::post('/member/ban/{group_id}', [GroupController::class, 'banMember']);
+    Route::post('/member/unban/{group_id}', [GroupController::class, 'unbanMember']);
+    Route::patch('/member/promote/{group_id}/{user_id}', [GroupController::class, 'promoteMember']);
+    Route::patch('/member/demote/{group_id}/{user_id}', [GroupController::class, 'demoteMember']);
 });
 
 
-
-Route::middleware(['auth:api'])->controller(GroupController::class)->prefix('auth/group')->group(function () {
-
-    Route::get('/list', 'list');
-    Route::post('/create', 'create');
-    Route::get('/show/{group_id}', 'show');
-    Route::post('/update/{group_id}', 'update');
-    Route::delete('/delete/{group_id}', 'destroy');
-    Route::post('add/member/{group_id}', 'addMember');
-    Route::post('/remove/member/{group_id}', 'removeMember');
-
-
-    Route::post('/leave/member/{group_id}', 'leaveMember');
-
-
-    Route::post('/mute/member/{group_id}', 'muteMember');
-    Route::post('/unmute/member/{group_id}', 'unmuteMember');
-    Route::post('/ban/member/{group_id}', 'banMember');
-    Route::post('/unban/member/{group_id}', 'unbanMember');
-
-    // New routes
-    Route::patch('/promote/member/{group_id}/{user_id}', 'promoteMember');
-    Route::patch('/demote/member/{group_id}/{user_id}', 'demoteMember');
+// Group Chat
+Route::middleware('auth:api')->prefix('group/chat')->group(function () {
+    Route::post('/send/{group_id}', [GroupChatController::class, 'sendGroupMessage']);
+    Route::get('/messages/{group_id}', [GroupChatController::class, 'getGroupMessages']);
 });
 
 
@@ -190,7 +174,7 @@ Route::middleware(['auth:api'])->controller(GroupController::class)->prefix('aut
 Route::middleware(['auth:api'])->controller(ChannelManageController::class)->prefix('auth/channel')->group(function () {
     Route::get('/list', 'list');
     Route::post('/store', 'store');
-    Route::post('channel_type/{channel_id}','setType');
+    Route::post('channel_type/{channel_id}', 'setType');
 
 
     Route::get('/show/{channel_id}', 'show');

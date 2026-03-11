@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Events;
 
 use App\Models\Chat;
@@ -12,11 +13,15 @@ class GroupMessageSentEvent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $chat;
+    public Chat $chat;
 
-    public function __construct($chat)
+    public function __construct(Chat $chat)
     {
-        $this->chat = $chat;
+        // Ensure relations are loaded so the frontend gets full data
+        $this->chat = $chat->loadMissing([
+            'sender:id,first_name,last_name,email,cover,last_activity_at',
+            'group:id,name,image_url',
+        ]);
     }
 
     public function broadcastOn(): array

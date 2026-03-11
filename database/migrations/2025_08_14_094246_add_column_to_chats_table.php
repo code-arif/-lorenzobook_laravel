@@ -12,9 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('chats', function (Blueprint $table) {
+            $table->foreignId('group_id')->nullable()->after('sender_id')->constrained('groups')->cascadeOnDelete(); // Add group_id
+            $table->dropForeign(['receiver_id']); // Drop old foreign key
+            $table->foreignId('receiver_id')->nullable()->change(); // Change receiver_id to nullable
+        });
 
-            $table->foreignId('group_id')->nullable()->constrained('groups')->onDelete('cascade')->after('sender_id');
-
+        // Re-add foreign key
+        Schema::table('chats', function (Blueprint $table) {
+            $table->foreign('receiver_id')->references('id')->on('users')->nullOnDelete();
         });
     }
 
@@ -24,7 +29,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('chats', function (Blueprint $table) {
-            //
+            $table->dropForeign(['receiver_id']);
+            $table->dropForeign(['group_id']);
+            $table->foreignId('receiver_id')->nullable(false)->change();
+            $table->dropColumn('group_id');
+            $table->foreign('receiver_id')->references('id')->on('users')->cascadeOnDelete();
         });
     }
 };

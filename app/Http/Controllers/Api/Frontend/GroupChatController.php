@@ -1,142 +1,121 @@
 <?php
+
 namespace App\Http\Controllers\Api\Frontend;
 
-use App\Events\GroupMessageSentEvent;
 use App\Models\Chat;
 use App\Models\Group;
 use App\Helpers\Helper;
+use App\Events\GroupMessageSentEvent;
 use Illuminate\Http\Request;
-use App\Events\MessageSendEvent;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class GroupChatController extends Controller
 {
-
     /**
-     * Send a message to a group
-     *
-     * @param int $group_id
-     * @param Request $request
-     * @return JsonResponse
+     * Send a message to a group.
+     * Fixed: saves to group_id (not room_id), receiver_id is null for group messages.
      */
-
-    public function sendGroupMessage($group_id, Request $request): JsonResponse
+    public function sendGroupMessage(int $group_id, Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'text' => 'nullable|string|max:255',
-            'file' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
+            'text' => 'nullable|string|max:1000',
+            'file' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['message' => $validator->errors()->first()], 400);
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
         }
 
-        $sender_id = auth('api')->id();
+        if (! $request->filled('text') && ! $request->hasFile('file')) {
+            return response()->json(['success' => false, 'message' => 'Message or file is required.'], 422);
+        }
 
-        // check if group exists and user is a member
-        $group = Group::where('id', $group_id)
-            ->whereHas('members', function ($query) use ($sender_id) {
-                $query->where('user_id', $sender_id);
-            })->first();
-        // dd($group);
+        $senderId = auth('api')->id();
+        $group    = Group::forUser($senderId)->find($group_id);
 
         if (! $group) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Group not found or you are not a member',
-                'data'    => [],
-                'code'    => 404,
-            ]);
+            return response()->json(['success' => false, 'message' => 'Group not found or you are not a member.'], 404);
+        }
+
+        // Check if sender is banned
+        $member = $group->members()->where('user_id', $senderId)->first();
+        if ($member && $member->pivot->is_banned) {
+            return response()->json(['success' => false, 'message' => 'You are banned from this group.'], 403);
         }
 
         $file = null;
         if ($request->hasFile('file')) {
-            $file = Helper::fileUpload($request->file('file'), 'chat', time() . '_' . getFileName($request->file('file')));
+            $file = Helper::fileUpload(
+                $request->file('file'),
+                'chat',
+                time() . '_' . getFileName($request->file('file'))
+            );
         }
 
         $chat = Chat::create([
-            'sender_id'   => $sender_id,
-            'receiver_id' => null,
+            'sender_id'   => $senderId,
+            'receiver_id' => null,       // No receiver for group messages
+            'group_id'    => $group->id, // FIX: was 'room_id' previously
             'text'        => $request->text,
             'file'        => $file,
-            'group_id'     => $group->id,
             'status'      => 'sent',
         ]);
 
-        // Load related data
-        $chat->load([
-            'sender:id,first_name,last_name,mobile_number,cover,last_activity_at',
-            'group:id,name,image_url',
-        ]);
+        $group->update(['last_activity_at' => now()]);
 
-        // Broadcast the message to group members
+        $chat->load(['sender:id,first_name,last_name,cover,last_activity_at', 'group:id,name,image_url']);
+
         broadcast(new GroupMessageSentEvent($chat))->toOthers();
 
-        $data = [
-            'chat' => $chat,
-        ];
-
         return response()->json([
             'success' => true,
-            'message' => 'Message sent to group successfully',
-            'data'    => $data,
-            'code'    => 200,
+            'message' => 'Message sent successfully.',
+            'data'    => ['chat' => $chat],
         ]);
     }
 
-    public function getGroupMessages($group_id, Request $request): JsonResponse
+    /**
+     * Get all messages for a group (newest first, paginated).
+     */
+    public function getGroupMessages(int $group_id, Request $request): JsonResponse
     {
-        // Get the authenticated user
-        $user_id = Auth::guard('api')->id();
-
-        // Verify group existence and membership
-        $group = Group::where('id', $group_id)
-            ->whereHas('members', function ($query) use ($user_id) {
-                $query->where('user_id', $user_id);
-            })->first();
+        $userId = auth('api')->id();
+        $group  = Group::forUser($userId)->find($group_id);
 
         if (! $group) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Group not found or you are not a member',
-                'data'    => [],
-                'code'    => 404,
-            ]);
+            return response()->json(['success' => false, 'message' => 'Group not found or you are not a member.'], 404);
         }
 
+        $messages = Chat::where('group_id', $group_id)
+            ->with(['sender:id,first_name,last_name,cover,last_activity_at'])
+            ->latest()
+            ->paginate($request->integer('per_page', 30));
 
-        $chats = Chat::where('group_id', $group_id)
-            ->with([
-                'sender:id,first_name,last_name,mobile_number,cover,last_activity_at',
-                'group:id,name,image_url',
-            ])
-            ->orderBy('created_at', 'desc')->get();
-
-
-        // Prepare group details
-        $groupData = [
-            'id'               => $group->id,
-            'name'             => $group->name,
-            'cover'            => $group->image_url ? url($group->image_url) : null,
-            'last_activity_at' => $group->last_activity_at,
-        ];
-
-        // Prepare response data
-        $data = [
-            'group'      => $groupData,
-            'messages'   => $chats, // Current page messages
-
-        ];
+        // Mark messages as read
+        Chat::where('group_id', $group_id)
+            ->where('sender_id', '!=', $userId)
+            ->where('status', 'sent')
+            ->update(['status' => 'read']);
 
         return response()->json([
             'success' => true,
-            'message' => 'Group messages retrieved successfully',
-            'data'    => $data,
-            'code'    => 200,
+            'message' => 'Messages retrieved successfully.',
+            'data'    => [
+                'group' => [
+                    'id'    => $group->id,
+                    'name'  => $group->name,
+                    'cover' => $group->image_url ? url($group->image_url) : null,
+                ],
+                'messages'   => $messages->items(),
+                'pagination' => [
+                    'current_page' => $messages->currentPage(),
+                    'last_page'    => $messages->lastPage(),
+                    'per_page'     => $messages->perPage(),
+                    'total'        => $messages->total(),
+                ],
+            ],
         ]);
     }
-
 }

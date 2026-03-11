@@ -8,25 +8,27 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Chat extends Model {
+class Chat extends Model
+{
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'sender_id',
         'receiver_id',
+        'room_id',
+        'group_id',
         'text',
         'file',
-        'room_id',
-        'group_id'
+        'status',
     ];
-
-   /*  protected $hidden = [
+    /*  protected $hidden = [
         'created_at',
         'updated_at',
         'deleted_at',
     ]; */
 
-    protected function casts(): array {
+    protected function casts(): array
+    {
         return [
             'sender_id'   => 'integer',
             'receiver_id' => 'integer',
@@ -69,19 +71,29 @@ class Chat extends Model {
         return $this->sender_id == auth('web')->user()->id ? 'sent' : 'received';
     }
 
-    public function sender(): BelongsTo {
+    public function sender(): BelongsTo
+    {
         return $this->belongsTo(User::class, 'sender_id');
     }
 
-    public function receiver(): BelongsTo {
+    public function receiver(): BelongsTo
+    {
         return $this->belongsTo(User::class, 'receiver_id');
     }
 
-    public function room(): BelongsTo {
+    public function room(): BelongsTo
+    {
         return $this->belongsTo(Room::class);
     }
 
-    public function group(): BelongsTo {
-        return $this->belongsTo(Group::class , 'group_id', 'id');
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class, 'group_id', 'id');
+    }
+
+    // ─── Accessors ────────────────────────────────────────────────────────────
+    public function getFileUrlAttribute(): ?string
+    {
+        return $this->file ? url($this->file) : null;
     }
 }

@@ -33,9 +33,9 @@ use App\Http\Controllers\Web\Backend\CMS\Web\Home\HomeBannerController;
 Route::get("dashboard", [DashboardController::class, 'index'])->name('dashboard');
 
 
-Route::get('/user-list' , [UserListController::class, 'index'])->name('user.index');
+Route::get('/user-list', [UserListController::class, 'index'])->name('user.index');
 
-Route::get('/group-list' , [GroupListController::class, 'index'])->name('group.index');
+Route::get('/group-list', [GroupListController::class, 'index'])->name('group.index');
 
 Route::get('channel-list', [ChannelListController::class, 'index'])->name('channel.index');
 
@@ -139,7 +139,6 @@ Route::prefix('cms')->name('cms.')->group(function () {
 
         Route::put('/content', 'content')->name('content');
     });
-
 });
 
 
@@ -159,19 +158,36 @@ Route::controller(ChatController::class)->prefix('chat')->name('chat.')->group(f
     Route::get('/seen/single/{chat_id}', 'seenSingle');
 });
 
-Route::controller(GroupChatController::class)->prefix('chat/group')->name('group-chat.')->group(function () {
-    Route::get('/', 'index')->name('index');
-    Route::get('/list', 'list')->name('list');
-    Route::get('/search', 'search')->name('search');
-    Route::get('/messages/{group_id}', 'messages')->name('messages');
-    Route::post('/send/{group_id}', 'sendMessage')->name('send');
-});
+Route::prefix('/chat/group')->name('group-chat.')->group(function () {
+    // ── Page ─────────────────────────────────────────
+    Route::get('/', [GroupChatController::class, 'index'])->name('index');
 
+    // ── Group list & search ─────────────────────────
+    Route::get('/list', [GroupChatController::class, 'list'])->name('list');
+    Route::get('/search', [GroupChatController::class, 'search'])->name('search');
+
+    // ── User list (for member-add dropdown) ─────────
+    Route::get('/users', [GroupChatController::class, 'userList'])->name('users');
+
+    // ── Group CRUD ──────────────────────────────────
+    Route::post('/create', [GroupChatController::class, 'createGroup'])->name('create');
+    Route::get('/details/{group_id}', [GroupChatController::class, 'groupDetails'])->name('details');
+    Route::post('/update/{group_id}', [GroupChatController::class, 'updateGroup'])->name('update');
+    Route::delete('/delete/{group_id}', [GroupChatController::class, 'deleteGroup'])->name('delete');
+
+    // ── Member management ───────────────────────────
+    Route::post('/member/add/{group_id}', [GroupChatController::class, 'addMember'])->name('member.add');
+    Route::post('/member/remove/{group_id}', [GroupChatController::class, 'removeMember'])->name('member.remove');
+    Route::post('/member/action/{group_id}', [GroupChatController::class, 'toggleMemberStatus'])->name('member.action');
+
+    // ── Chat ────────────────────────────────────────
+    Route::get('/messages/{group_id}', [GroupChatController::class, 'messages'])->name('messages');
+    Route::post('/send/{group_id}', [GroupChatController::class, 'sendMessage'])->name('send');
+});
 
 /*
 * Users Access Route
 */
-
 Route::resource('users', UserController::class);
 Route::controller(UserController::class)->prefix('users')->name('users.')->group(function () {
     Route::get('/status/{id}', 'status')->name('status');
