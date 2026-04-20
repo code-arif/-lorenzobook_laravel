@@ -3,7 +3,7 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - main 
+      - main
 
 jobs:
   deploy:
@@ -21,7 +21,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            cd /home/mybergo-admin/htdocs/admin.mybergo.com
+            cd /home/chatspeedx/htdocs/chatspeedx.com
             echo "🚀 Deploy started"
 
             git fetch origin main
