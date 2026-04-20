@@ -145,7 +145,7 @@ Route::middleware('auth:api')->prefix('auth/group')->group(function () {
     // Group CRUD
     Route::get('/list', [GroupController::class, 'list']);
     Route::post('/create', [GroupController::class, 'create']);
-    Route::get('/show/{group_id}', [GroupController::class, 'show']);
+    Route::get('/show/{group_id}', [GroupController::class, 'show']); // group details with members
     Route::post('/update/{group_id}', [GroupController::class, 'update']);
     Route::delete('/delete/{group_id}', [GroupController::class, 'destroy']);
 
