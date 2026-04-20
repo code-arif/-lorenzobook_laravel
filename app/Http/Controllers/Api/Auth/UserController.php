@@ -95,21 +95,23 @@ class UserController extends Controller
     // user list
     public function user_list(Request $request)
     {
-        $query = User::query()->with('roles');
+        $query = User::select($this->select)
+            ->where('id', '!=', auth('api')->id())
+            ->with('roles');
 
-        // remove all filters first to confirm data exists
         if ($request->filled('search')) {
-            $search = strtolower(trim($request->search));
-
-            $query->where(function ($q) use ($search) {
-                $q->whereRaw('LOWER(first_name) LIKE ?', ["%$search%"])
-                    ->orWhereRaw('LOWER(last_name) LIKE ?', ["%$search%"])
-                    ->orWhereRaw('LOWER(mobile_number) LIKE ?', ["%$search%"]);
+            $query->where(function ($q) use ($request) {
+                $q->where('first_name', 'like', '%' . $request->search . '%')
+                    ->orWhere('last_name', 'like', '%' . $request->search . '%')
+                    ->orWhere('mobile_number', 'like', '%' . $request->search . '%');
             });
+        } else {
+            $query->whereNull('email');
         }
 
         $users = $query->paginate(10);
 
         return Helper::jsonResponse(true, 'User list fetched successfully', 200, $users);
     }
+
 }
