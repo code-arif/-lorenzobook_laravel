@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('group_id')->constrained('groups')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->enum('role', ['admin', 'member'])->default('member'); // admin, member
+            $table->enum('role', ['admin', 'member', 'owner'])->default('member'); // admin, member, owner
             $table->boolean('is_muted')->default(false);
             $table->boolean('is_banned')->default(false);
             $table->boolean('is_kicked')->default(false);

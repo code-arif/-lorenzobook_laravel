@@ -76,7 +76,7 @@ class GroupController extends Controller
 
     public function show(int $group_id): JsonResponse
     {
-        $group = Group::with(['members:id,first_name,last_name,cover,last_activity_at,is_online', 'createdBy:id,first_name,last_name,cover,last_activity_at,is_online'])
+        $group = Group::with(['members:id,first_name,last_name,cover,last_activity_at', 'createdBy:id,first_name,last_name,cover,last_activity_at'])
             ->withCount('members')
             ->find($group_id);
 
@@ -149,9 +149,9 @@ class GroupController extends Controller
             return $this->error([], 'Group not found.', 404);
         }
 
-        if (Gate::denies('manage-members', $group)) {
-            return $this->error([], 'You are not authorized to add members.', 403);
-        }
+        // if (Gate::denies('manage-members', $group)) {
+        //     return $this->error([], 'You are not authorized to add members.', 403);
+        // }
 
         $validator = Validator::make($request->all(), [
             'member_ids'   => 'required|array',
@@ -266,9 +266,9 @@ class GroupController extends Controller
             return $this->error([], 'Group not found.', 404);
         }
 
-        if (Gate::denies('manage-members', $group)) {
-            return $this->error([], 'You are not authorized.', 403);
-        }
+        // if (Gate::denies('manage-members', $group)) {
+        //     return $this->error([], 'You are not authorized.', 403);
+        // }
 
         $member = $group->members()->where('user_id', $userId)->first();
 
