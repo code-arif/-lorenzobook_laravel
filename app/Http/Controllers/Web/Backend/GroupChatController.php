@@ -385,7 +385,7 @@ class GroupChatController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'text' => 'nullable|string|max:1000',
-            'file' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
+            'file' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
 
         if ($validator->fails()) {
