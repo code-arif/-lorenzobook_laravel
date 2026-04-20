@@ -76,7 +76,7 @@ class GroupController extends Controller
 
     public function show(int $group_id): JsonResponse
     {
-        $group = Group::with(['members:id,first_name,last_name,cover', 'createdBy:id,first_name,last_name'])
+        $group = Group::with(['members:id,first_name,last_name,cover,last_activity_at,is_online', 'createdBy:id,first_name,last_name,cover,last_activity_at,is_online'])
             ->withCount('members')
             ->find($group_id);
 
