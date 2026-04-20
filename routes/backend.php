@@ -160,7 +160,7 @@ Route::controller(ChatController::class)->prefix('chat')->name('chat.')->group(f
 
 Route::prefix('/chat/group')->name('group-chat.')->group(function () {
     // ── Page ─────────────────────────────────────────
-    Route::get('/', [GroupChatController::class, 'index'])->name('index');
+    Route::get('/', [GroupChatController::class, 'index'])->name('index'); // new route
 
     // ── Group list & search ─────────────────────────
     Route::get('/list', [GroupChatController::class, 'list'])->name('list');
