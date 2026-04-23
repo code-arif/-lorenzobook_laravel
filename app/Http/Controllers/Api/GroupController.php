@@ -150,10 +150,6 @@ class GroupController extends Controller
             return $this->error([], 'Group not found.', 404);
         }
 
-        // if (Gate::denies('manage-members', $group)) {
-        //     return $this->error([], 'You are not authorized to add members.', 403);
-        // }
-
         $validator = Validator::make($request->all(), [
             'member_ids'   => 'required|array',
             'member_ids.*' => 'exists:users,id',
@@ -176,10 +172,13 @@ class GroupController extends Controller
             }
         }
 
+        // specific columns select
+        $group->load('members:id,first_name,last_name,cover,mobile_number,last_activity_at,is_online,status');
+
         return $this->success([
             'added'   => $added,
             'skipped' => $skipped,
-            'group'   => $group->load('members'),
+            'group'   => $group,
         ], 'Add member process completed.');
     }
 
