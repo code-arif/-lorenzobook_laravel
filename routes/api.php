@@ -126,17 +126,20 @@ Route::middleware(['auth:api'])->controller(FriendController::class)->prefix('au
 /*
 # Chat Route
 */
-
-
-
-Route::middleware(['auth:api'])->controller(ChatController::class)->prefix('auth/chat')->group(function () {
-    Route::get('/list', 'list');
-    Route::post('/send/{receiver_id}', 'send');
-    Route::get('/conversation/{receiver_id}', 'conversation');
-    Route::get('/room/{receiver_id}', 'room');
-    Route::get('/search', 'search');
-    Route::get('/seen/all/{receiver_id}', 'seenAll');
-    Route::get('/seen/single/{chat_id}', 'seenSingle');
+Route::group(['prefix' => 'auth/chat', 'middleware' => 'auth:api'], function () {
+    Route::get('/list', [ChatController::class, 'list']);
+    Route::post('/send/{receiver_id}', [ChatController::class, 'send']);
+    Route::get('/conversation/{receiver_id}', [ChatController::class, 'conversation']);
+    Route::get('/room/{receiver_id}', [ChatController::class, 'room']);
+    Route::get('/search', [ChatController::class, 'search']);
+    Route::get('/seen/all/{receiver_id}', [ChatController::class, 'seenAll']);
+    Route::get('/seen/single/{chat_id}', [ChatController::class, 'seenSingle']);
+    
+    Route::get('/conversation/{receiver_id}/search', [ChatController::class, 'searchConversation']);
+    Route::delete('/conversation/{receiver_id}/clear-history', [ChatController::class, 'clearHistory']);
+    Route::delete('/conversation/{receiver_id}/delete', [ChatController::class, 'deleteConversation']);
+    Route::post('/mute/{receiver_id}', [ChatController::class, 'muteConversation']);
+    Route::post('/unmute/{receiver_id}', [ChatController::class, 'unmuteConversation']);
 });
 
 

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Api;
 
 use App\Events\MessageSendEvent;
@@ -7,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Chat;
 use App\Models\Room;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,9 +16,11 @@ use Illuminate\Support\Facades\Validator;
 
 class ChatController extends Controller
 {
-    public function index()
-    {}
+    public function index() {}
 
+    /**
+     * Get the list of users the authenticated user has chatted with, along with groups and channels
+     */
     public function list(): JsonResponse
     {
         $user = auth('api')->user();
@@ -25,7 +29,7 @@ class ChatController extends Controller
         $chats = $user->chats()
             ->with(['sender:id,first_name,last_name', 'receiver:id,first_name,last_name'])
             ->orderBy('created_at', 'desc')
-        // ->where('sender_id', '!=', $user->id)
+            // ->where('sender_id', '!=', $user->id)
             ->get();
 
         // Collect unique users from chat
@@ -107,6 +111,9 @@ class ChatController extends Controller
         ]);
     }
 
+    /**
+     * Chat list user search
+     */
     public function search(Request $request): JsonResponse
     {
         $user_id = Auth::guard('api')->id();
@@ -130,10 +137,6 @@ class ChatController extends Controller
 
     /**
      ** Get messages between the authenticated user and another user
-     *
-     * @param User $user
-     * @param Request $request
-     * @return JsonResponse
      */
     public function conversation($receiver_id): JsonResponse
     {
@@ -186,17 +189,13 @@ class ChatController extends Controller
     }
 
     /**
-     *! Send a message to another user
-     *
-     * @param User $user
-     * @param Request $request
-     * @return JsonResponse
+     * Send a message to another user
      */
     public function send($receiver_id, Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'text' => 'nullable|string|max:255',
-            'file' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:1024',
+            'file' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240', // Max file size of 10MB
         ]);
 
         if ($validator->fails()) {
@@ -258,6 +257,9 @@ class ChatController extends Controller
         ]);
     }
 
+    /**
+     * Mark all messages as read between the authenticated user and another user
+     */
     public function seenAll($receiver_id): JsonResponse
     {
         $sender_id = Auth::guard('api')->id();
@@ -281,6 +283,9 @@ class ChatController extends Controller
         ]);
     }
 
+    /**
+     * Mark all messages as read between the authenticated user and another user
+     */
     public function seenSingle($chat_id): JsonResponse
     {
         $sender_id = Auth::guard('api')->id();
@@ -299,6 +304,9 @@ class ChatController extends Controller
         ]);
     }
 
+    /**
+     * Get the room between the authenticated user and another user
+     */
     public function room($receiver_id)
     {
         $sender_id = Auth::guard('api')->id();
@@ -312,8 +320,8 @@ class ChatController extends Controller
             ->where(function ($query) use ($receiver_id, $sender_id) {
                 $query->where('user_one_id', $receiver_id)->where('user_two_id', $sender_id);
             })->orWhere(function ($query) use ($receiver_id, $sender_id) {
-            $query->where('user_one_id', $sender_id)->where('user_two_id', $receiver_id);
-        })->first();
+                $query->where('user_one_id', $sender_id)->where('user_two_id', $receiver_id);
+            })->first();
 
         if (! $room) {
             $room = Room::create([
@@ -327,5 +335,263 @@ class ChatController extends Controller
         ];
 
         return response()->json(['success' => true, 'message' => 'Group retrieved successfully', 'data' => $data, 'code' => 200]);
+    }
+
+    /**
+     * Search messages within a specific conversation.
+     * GET /auth/chat/conversation/{receiver_id}/search?keyword=hello
+     */
+    public function searchConversation($receiver_id, Request $request): JsonResponse
+    {
+        $sender_id = Auth::guard('api')->id();
+        $keyword   = $request->get('keyword');
+
+        if (empty($keyword)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Keyword is required',
+                'data'    => [],
+            ], 422);
+        }
+
+        $chats = Chat::where(function ($query) use ($receiver_id, $sender_id) {
+            $query->where('sender_id', $sender_id)->where('receiver_id', $receiver_id);
+        })->orWhere(function ($query) use ($receiver_id, $sender_id) {
+            $query->where('sender_id', $receiver_id)->where('receiver_id', $sender_id);
+        })
+            ->where('text', 'LIKE', "%{$keyword}%")
+            ->with([
+                'sender:id,first_name,last_name,cover',
+                'receiver:id,first_name,last_name,cover',
+            ])
+            ->orderBy('created_at')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Search results retrieved successfully',
+            'data'    => [
+                'keyword' => $keyword,
+                'count'   => $chats->count(),
+                'chats'   => $chats,
+            ],
+        ]);
+    }
+
+
+    /**
+     * Clear all chat history between two users (deletes messages + media files).
+     * This affects BOTH sides of the conversation.
+     * DELETE /auth/chat/conversation/{receiver_id}/clear-history
+     */
+    public function clearHistory($receiver_id): JsonResponse
+    {
+        $sender_id = Auth::guard('api')->id();
+
+        $receiver = User::find($receiver_id);
+        if (! $receiver || $receiver_id == $sender_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found or cannot clear history with yourself',
+            ], 404);
+        }
+
+        // Fetch all chats between these two users (including soft-deleted)
+        $chats = Chat::withTrashed()
+            ->where(function ($query) use ($receiver_id, $sender_id) {
+                $query->where('sender_id', $sender_id)->where('receiver_id', $receiver_id);
+            })->orWhere(function ($query) use ($receiver_id, $sender_id) {
+                $query->where('sender_id', $receiver_id)->where('receiver_id', $sender_id);
+            })->get();
+
+        // Delete media files from storage
+        foreach ($chats as $chat) {
+            if ($chat->file) {
+                $filePath = public_path($chat->file);
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+                // If you use Laravel Storage:
+                // Storage::delete($chat->file);
+            }
+        }
+
+        // Force delete all chats (bypass soft delete)
+        Chat::withTrashed()
+            ->where(function ($query) use ($receiver_id, $sender_id) {
+                $query->where('sender_id', $sender_id)->where('receiver_id', $receiver_id);
+            })->orWhere(function ($query) use ($receiver_id, $sender_id) {
+                $query->where('sender_id', $receiver_id)->where('receiver_id', $sender_id);
+            })->forceDelete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Chat history cleared successfully',
+            'data'    => [],
+        ]);
+    }
+
+    // ─── NEW: Delete and Leave (removes from chat list for this user only) ────
+
+    /**
+     * Delete conversation from the current user's chat list.
+     * The other user's conversation remains intact.
+     * Messages sent AFTER this point will re-appear in the list.
+     * DELETE /auth/chat/conversation/{receiver_id}/delete
+     */
+    public function deleteConversation($receiver_id): JsonResponse
+    {
+        $sender_id = Auth::guard('api')->id();
+
+        $receiver = User::find($receiver_id);
+        if (! $receiver || $receiver_id == $sender_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found or cannot delete conversation with yourself',
+            ], 404);
+        }
+
+        $room = Room::where(function ($query) use ($receiver_id, $sender_id) {
+            $query->where('user_one_id', $receiver_id)->where('user_two_id', $sender_id);
+        })->orWhere(function ($query) use ($receiver_id, $sender_id) {
+            $query->where('user_one_id', $sender_id)->where('user_two_id', $receiver_id);
+        })->first();
+
+        if (! $room) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Conversation not found',
+            ], 404);
+        }
+
+        // Mark this user's side as deleted with current timestamp
+        if ($room->user_one_id == $sender_id) {
+            $room->update(['user_one_deleted_at' => now()]);
+        } else {
+            $room->update(['user_two_deleted_at' => now()]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Conversation deleted successfully',
+            'data'    => [],
+        ]);
+    }
+
+
+    /**
+     * Mute a conversation for the current user.
+     *
+     * Request body:
+     *  - type: 'disable_sound' | 'mute_for' | 'mute_forever'
+     *  - duration: (required when type=mute_for) '1_hour' | '8_hours' | '24_hours' | '1_week'
+     *
+     * POST /auth/chat/mute/{receiver_id}
+     */
+    public function muteConversation($receiver_id, Request $request): JsonResponse
+    {
+        $sender_id = Auth::guard('api')->id();
+
+        $validator = Validator::make($request->all(), [
+            'type'     => 'required|in:disable_sound,mute_for,mute_forever',
+            'duration' => 'required_if:type,mute_for|in:1_hour,8_hours,24_hours,1_week',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $receiver = User::find($receiver_id);
+        if (! $receiver || $receiver_id == $sender_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found or cannot mute conversation with yourself',
+            ], 404);
+        }
+
+        $room = $this->findOrCreateRoom($sender_id, $receiver_id);
+
+        // Calculate mute expiry
+        $muteUntil = match ($request->type) {
+            'disable_sound' => Carbon::create(9999, 12, 31, 23, 59, 59), // Sound only — treated as forever
+            'mute_forever'  => Carbon::create(9999, 12, 31, 23, 59, 59), // Forever
+            'mute_for'      => match ($request->duration) {
+                '1_hour'   => now()->addHour(),
+                '8_hours'  => now()->addHours(8),
+                '24_hours' => now()->addDay(),
+                '1_week'   => now()->addWeek(),
+                default    => now()->addHour(),
+            },
+        };
+
+        // Update the correct user's mute column
+        if ($room->user_one_id == $sender_id) {
+            $room->update(['user_one_muted_until' => $muteUntil]);
+        } else {
+            $room->update(['user_two_muted_until' => $muteUntil]);
+        }
+
+        $isMuteForever = $request->type !== 'mute_for';
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Conversation muted successfully',
+            'data'    => [
+                'type'          => $request->type,
+                'is_muted'      => true,
+                'mute_forever'  => $isMuteForever,
+                'muted_until'   => $isMuteForever ? null : $muteUntil->toDateTimeString(),
+            ],
+        ]);
+    }
+
+
+    /**
+     * Unmute a conversation for the current user.
+     * POST /auth/chat/unmute/{receiver_id}
+     */
+    public function unmuteConversation($receiver_id): JsonResponse
+    {
+        $sender_id = Auth::guard('api')->id();
+
+        $receiver = User::find($receiver_id);
+        if (! $receiver || $receiver_id == $sender_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        $room = Room::where(function ($query) use ($receiver_id, $sender_id) {
+            $query->where('user_one_id', $receiver_id)->where('user_two_id', $sender_id);
+        })->orWhere(function ($query) use ($receiver_id, $sender_id) {
+            $query->where('user_one_id', $sender_id)->where('user_two_id', $receiver_id);
+        })->first();
+
+        if (! $room) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Conversation not found',
+            ], 404);
+        }
+
+        // Clear the mute column for this user
+        if ($room->user_one_id == $sender_id) {
+            $room->update(['user_one_muted_until' => null]);
+        } else {
+            $room->update(['user_two_muted_until' => null]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Conversation unmuted successfully',
+            'data'    => [
+                'is_muted'    => false,
+                'muted_until' => null,
+            ],
+        ]);
     }
 }
