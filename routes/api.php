@@ -134,8 +134,12 @@ Route::group(['prefix' => 'auth/chat', 'middleware' => 'auth:api'], function () 
     Route::get('/conversation/{receiver_id}/search', [ChatController::class, 'searchConversation']); // done
     Route::delete('/conversation/{receiver_id}/clear-history', [ChatController::class, 'clearHistory']); // done
     Route::delete('/conversation/{receiver_id}/delete', [ChatController::class, 'deleteConversation']); // done
-    Route::post('/mute/{receiver_id}', [ChatController::class, 'muteConversation']);
-    Route::post('/unmute/{receiver_id}', [ChatController::class, 'unmuteConversation']);
+    Route::post('/mute/{receiver_id}', [ChatController::class, 'muteConversation']); //done
+    Route::post('/unmute/{receiver_id}', [ChatController::class, 'unmuteConversation']); //done
+
+    // delete specific message
+    Route::delete('/message/{message_id}/delete', [ChatController::class, 'deleteMessage']);
+    Route::post('/messages/delete-multiple', [ChatController::class, 'deleteMultipleMessages']);
 });
 
 
@@ -166,6 +170,11 @@ Route::middleware('auth:api')->prefix('auth/group')->group(function () {
 Route::middleware('auth:api')->prefix('group/chat')->group(function () {
     Route::post('/send/{group_id}', [GroupChatController::class, 'sendGroupMessage']);
     Route::get('/messages/{group_id}', [GroupChatController::class, 'getGroupMessages']);
+
+    // Message management
+    Route::delete('/clear-history/{group_id}', [GroupChatController::class, 'clearGroupChatHistory']);
+    Route::delete('/message/delete/{message_id}', [GroupChatController::class, 'deleteGroupMessage']);
+    Route::post('/messages/delete-multiple', [GroupChatController::class, 'deleteMultipleGroupMessages']);
 });
 
 // channel management

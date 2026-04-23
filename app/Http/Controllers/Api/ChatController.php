@@ -761,6 +761,39 @@ class ChatController extends Controller
     }
 
     /**
+     * Delete specific message (sender only)
+     */
+    public function deleteMessage($message_id): JsonResponse
+    {
+        $userId = auth('api')->id();
+        $chat   = Chat::where('id', $message_id)->where('sender_id', $userId)->first();
+
+        if (! $chat) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Message not found or you are not authorized',
+            ], 404);
+        }
+
+        // Delete media file from storage
+        if ($chat->file) {
+            $rawFile = $chat->getRawOriginal('file');
+            if ($rawFile) {
+                Helper::fileDelete(public_path($rawFile));
+            }
+        }
+
+        // Force delete the chat record
+        $chat->forceDelete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Message deleted successfully',
+            'data'    => [],
+        ]);
+    }
+
+    /**
      * Find or create a room between two users.
      */
     private function findOrCreateRoom(int $senderId, int $receiverId): Room
@@ -822,5 +855,51 @@ class ChatController extends Controller
             'muted_until' => $isForever ? null : $muteUntilCarbon->toDateTimeString(),
             'is_forever'  => $isForever,
         ];
+    }
+
+    /**
+     * Delete multiple messages (sender only)
+     */
+    public function deleteMultipleMessages(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'message_ids'   => 'required|array',
+            'message_ids.*' => 'exists:chats,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $userId = auth('api')->id();
+        $chats  = Chat::whereIn('id', $request->message_ids)->where('sender_id', $userId)->get();
+
+        if ($chats->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No authorized messages found to delete',
+            ], 404);
+        }
+
+        foreach ($chats as $chat) {
+            // Delete media file from storage
+            if ($chat->file) {
+                $rawFile = $chat->getRawOriginal('file');
+                if ($rawFile) {
+                    Helper::fileDelete(public_path($rawFile));
+                }
+            }
+            // Force delete the chat record
+            $chat->forceDelete();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => count($chats) . ' messages deleted successfully',
+            'data'    => [],
+        ]);
     }
 }

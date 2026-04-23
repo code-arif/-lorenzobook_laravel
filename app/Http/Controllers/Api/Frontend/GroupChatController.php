@@ -118,4 +118,103 @@ class GroupChatController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Clear all chat history for a group (deletes messages + media files).
+     * This affects ALL members of the group.
+     */
+    public function clearGroupChatHistory(int $group_id): JsonResponse
+    {
+        $userId = auth('api')->id();
+        $group  = Group::forUser($userId)->find($group_id);
+
+        if (! $group) {
+            return response()->json(['success' => false, 'message' => 'Group not found or you are not a member.'], 404);
+        }
+
+        // Fetch all chats in this group (including soft-deleted)
+        $chats = Chat::withTrashed()->where('group_id', $group_id)->get();
+
+        // Delete media files from storage
+        foreach ($chats as $chat) {
+            if ($chat->file) {
+                $rawFile = $chat->getRawOriginal('file');
+                if ($rawFile) {
+                    Helper::fileDelete(public_path($rawFile));
+                }
+            }
+        }
+
+        // Force delete all chats in this group
+        Chat::withTrashed()->where('group_id', $group_id)->forceDelete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Group chat history cleared successfully.',
+        ]);
+    }
+
+    /**
+     * Delete a specific message (sender only).
+     */
+    public function deleteGroupMessage(int $message_id): JsonResponse
+    {
+        $userId = auth('api')->id();
+        $chat   = Chat::where('id', $message_id)->where('sender_id', $userId)->first();
+
+        if (! $chat) {
+            return response()->json(['success' => false, 'message' => 'Message not found or you are not authorized.'], 404);
+        }
+
+        if ($chat->file) {
+            $rawFile = $chat->getRawOriginal('file');
+            if ($rawFile) {
+                Helper::fileDelete(public_path($rawFile));
+            }
+        }
+
+        $chat->forceDelete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Message deleted successfully.',
+        ]);
+    }
+
+    /**
+     * Delete multiple messages (sender only).
+     */
+    public function deleteMultipleGroupMessages(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'message_ids'   => 'required|array',
+            'message_ids.*' => 'exists:chats,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $userId = auth('api')->id();
+        $chats  = Chat::whereIn('id', $request->message_ids)->where('sender_id', $userId)->get();
+
+        if ($chats->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'No authorized messages found to delete.'], 404);
+        }
+
+        foreach ($chats as $chat) {
+            if ($chat->file) {
+                $rawFile = $chat->getRawOriginal('file');
+                if ($rawFile) {
+                    Helper::fileDelete(public_path($rawFile));
+                }
+            }
+            $chat->forceDelete();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => count($chats) . ' messages deleted successfully.',
+        ]);
+    }
 }
