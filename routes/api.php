@@ -76,12 +76,9 @@ Route::group(['middleware' => 'auth:api'], function ($router) {
     Route::get('/me', [UserController::class, 'me']);
     Route::post('/update-profile', [UserController::class, 'updateProfile']);
     // Route::post('/update-avatar', [UserController::class, 'updateAvatar']);
-
-
     Route::get('/user/list', [UserController::class, 'user_list']);
-
-
     Route::get('/logout', [LogoutController::class, 'logout']);
+    Route::post('/update-username', [UserController::class, 'updateUsername']);
 });
 
 /*
@@ -172,9 +169,9 @@ Route::middleware('auth:api')->prefix('group/chat')->group(function () {
     Route::get('/messages/{group_id}', [GroupChatController::class, 'getGroupMessages']);
 
     // Message management
-    Route::delete('/clear-history/{group_id}', [GroupChatController::class, 'clearGroupChatHistory']);
-    Route::delete('/message/delete/{message_id}', [GroupChatController::class, 'deleteGroupMessage']);
-    Route::post('/messages/delete-multiple', [GroupChatController::class, 'deleteMultipleGroupMessages']);
+    Route::delete('/clear-history/{group_id}', [GroupChatController::class, 'clearGroupChatHistory']); // done
+    Route::delete('/message/delete/{message_id}', [GroupChatController::class, 'deleteGroupMessage']); // done
+    Route::post('/messages/delete-multiple', [GroupChatController::class, 'deleteMultipleGroupMessages']); // done
 });
 
 // channel management

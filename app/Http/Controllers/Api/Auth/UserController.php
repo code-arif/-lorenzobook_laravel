@@ -110,4 +110,16 @@ class UserController extends Controller
 
         return Helper::jsonResponse(true, 'User list fetched successfully', 200, $users);
     }
+
+    // update username
+    public function updateUsername(Request $request)
+    {
+        $validatedData = $request->validate([
+            'username' => 'required|string|max:100',
+        ]);
+        $user = auth('api')->user();
+        $user->update($validatedData);
+        $data = User::select($this->select)->with('roles')->find($user->id);
+        return Helper::jsonResponse(true, 'Username updated successfully', 200, $data);
+    }
 }
