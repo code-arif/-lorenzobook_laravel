@@ -708,7 +708,7 @@ class ChatController extends Controller
                 'type'          => $request->type,
                 'is_muted'      => true,
                 'mute_forever'  => $isMuteForever,
-                'muted_until'   => $isMuteForever ? null : $muteUntil->toDateTimeString(),
+                'muted_until'   => $isMuteForever ? null : $muteUntil,
             ],
         ]);
     }
