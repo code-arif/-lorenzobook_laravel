@@ -162,14 +162,11 @@ Route::middleware('auth:api')->prefix('auth/group')->group(function () {
     Route::get('/search/{group_id}', [GroupController::class, 'searchMessages']);
 });
 
-
 // Group Chat
 Route::middleware('auth:api')->prefix('group/chat')->group(function () {
     Route::post('/send/{group_id}', [GroupChatController::class, 'sendGroupMessage']);
     Route::get('/messages/{group_id}', [GroupChatController::class, 'getGroupMessages']);
 });
-
-
 
 // channel management
 Route::middleware(['auth:api'])->controller(ChannelManageController::class)->prefix('auth/channel')->group(function () {

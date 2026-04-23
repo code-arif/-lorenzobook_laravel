@@ -60,7 +60,7 @@ class GroupController extends Controller
         ]);
 
         // Attach creator as admin
-        $group->members()->attach(auth()->id(), ['role' => 'admin', 'joined_at' => now()]);
+        $group->members()->attach(auth()->id(), ['role' => 'owner', 'joined_at' => now()]);
 
         // Attach additional members
         if ($request->filled('member_ids')) {
