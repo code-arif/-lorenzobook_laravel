@@ -119,10 +119,6 @@ Route::middleware(['auth:api'])->controller(FriendController::class)->prefix('au
     Route::get('/details/{id}', 'details');
 });
 
-
-
-
-
 /*
 # Chat Route
 */
@@ -134,7 +130,7 @@ Route::group(['prefix' => 'auth/chat', 'middleware' => 'auth:api'], function () 
     Route::get('/search', [ChatController::class, 'search']);
     Route::get('/seen/all/{receiver_id}', [ChatController::class, 'seenAll']);
     Route::get('/seen/single/{chat_id}', [ChatController::class, 'seenSingle']);
-    
+
     Route::get('/conversation/{receiver_id}/search', [ChatController::class, 'searchConversation']);
     Route::delete('/conversation/{receiver_id}/clear-history', [ChatController::class, 'clearHistory']);
     Route::delete('/conversation/{receiver_id}/delete', [ChatController::class, 'deleteConversation']);
