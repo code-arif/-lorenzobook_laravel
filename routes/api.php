@@ -1,15 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\Auth\RegisterController;
-use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
-use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\Auth\UserController;
-use App\Http\Controllers\Api\Auth\SocialLoginController;
 use App\Http\Controllers\Api\ChannelManageController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\FirebaseTokenController;
-use App\Http\Controllers\Api\Frontend\categoryController;
 use App\Http\Controllers\Api\Frontend\FaqController;
 use App\Http\Controllers\Api\Frontend\FriendController;
 use App\Http\Controllers\Api\Frontend\GroupChatController;
@@ -27,10 +23,8 @@ use Illuminate\Support\Facades\Route;
 
 //page
 Route::get('/page/home', [HomeController::class, 'index']);
-
-Route::get('/category', [categoryController::class, 'index']);
+// Route::get('/category', [categoryController::class, 'index']);
 Route::get('/subcategory', [SubcategoryController::class, 'index']);
-
 Route::get('/social/links', [SocialLinksController::class, 'index']);
 Route::get('/settings', [SettingsController::class, 'index']);
 Route::get('/faq', [FaqController::class, 'index']);
@@ -47,8 +41,6 @@ Route::middleware(['auth:api'])->controller(PostController::class)->prefix('auth
     Route::delete('/delete/{id}', 'destroy');
 });
 
-
-
 Route::get('/posts', [PostController::class, 'posts']);
 Route::get('/post/show/{post_id}', [PostController::class, 'post']);
 
@@ -58,21 +50,16 @@ Route::middleware(['auth:api'])->controller(ImageController::class)->prefix('aut
     Route::get('/delete/{id}', 'destroy');
 });
 
-/*
-# Auth Route
-*/
-
+/**
+ * Auth Route
+ */
 Route::group(['middleware' => 'guest:api'], function ($router) {
-
-
-    //register
     Route::post('register', [RegisterController::class, 'register']);
     Route::post('/verify-mobile-otp', [RegisterController::class, 'verifyPhoneOtp']);
     Route::post('/resend-otp', [RegisterController::class, 'resendPhoneOtp']);
 });
 
 Route::group(['middleware' => 'auth:api'], function ($router) {
-
     Route::get('/me', [UserController::class, 'me']);
     Route::post('/update-profile', [UserController::class, 'updateProfile']);
     // Route::post('/update-avatar', [UserController::class, 'updateAvatar']);
@@ -84,7 +71,6 @@ Route::group(['middleware' => 'auth:api'], function ($router) {
 /*
 # Firebase Notification Route
 */
-
 Route::middleware(['auth:api'])->controller(FirebaseTokenController::class)->prefix('firebase')->group(function () {
     Route::get("test", "test");
     Route::post("token/add", "store");
@@ -95,17 +81,12 @@ Route::middleware(['auth:api'])->controller(FirebaseTokenController::class)->pre
 /*
 # In App Notification Route
 */
-
 Route::middleware(['auth:api'])->controller(NotificationController::class)->prefix('notify')->group(function () {
     Route::get('test', 'test');
     Route::get('/', 'index');
     Route::get('status/read/all', 'readAll');
     Route::get('status/read/{id}', 'readSingle');
 })->middleware('auth:api');
-
-
-
-
 
 Route::middleware(['auth:api'])->controller(FriendController::class)->prefix('auth/friend')->group(function () {
 
@@ -138,7 +119,6 @@ Route::group(['prefix' => 'auth/chat', 'middleware' => 'auth:api'], function () 
     Route::delete('/message/{message_id}/delete', [ChatController::class, 'deleteMessage']);
     Route::post('/messages/delete-multiple', [ChatController::class, 'deleteMultipleMessages']);
 });
-
 
 // group chat manage
 Route::middleware('auth:api')->prefix('auth/group')->group(function () {
@@ -192,23 +172,12 @@ Route::middleware(['auth:api'])->controller(ChannelManageController::class)->pre
     Route::post('/leave/subscriber/{channel_id}', 'leaveMember');
 });
 
-
-
-
-
-
-
-
 Route::post('/save-fcm-token', [FirebaseTokenController::class, 'test_token_store']);
-
 Route::post('/send-call', [FirebaseTokenController::class, 'sendCall']);
-
-
 
 /*
 # CMS
 */
-
 Route::prefix('cms')->name('cms.')->group(function () {
     Route::get('home', [HomeController::class, 'index'])->name('home');
 });
