@@ -123,6 +123,7 @@ class GroupController extends Controller
         return $this->success($group, 'Group updated successfully.');
     }
 
+    // Group Delete
     public function destroy(int $group_id): JsonResponse
     {
         $group = Group::find($group_id);
@@ -131,8 +132,9 @@ class GroupController extends Controller
             return $this->error([], 'Group not found.', 404);
         }
 
-        if (Gate::denies('delete', $group)) {
-            return $this->error([], 'You are not authorized to delete this group.', 403);
+        // Only the creator/owner can delete the group
+        if ($group->created_by !== auth('api')->id()) {
+            return $this->error([], 'Only the group owner can delete this group.', 403);
         }
 
         $group->delete();
