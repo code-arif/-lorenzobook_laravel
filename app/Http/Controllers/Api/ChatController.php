@@ -355,9 +355,13 @@ class ChatController extends Controller
         }
 
         $chats = Chat::where(function ($query) use ($receiver_id, $sender_id) {
-            $query->where('sender_id', $sender_id)->where('receiver_id', $receiver_id);
-        })->orWhere(function ($query) use ($receiver_id, $sender_id) {
-            $query->where('sender_id', $receiver_id)->where('receiver_id', $sender_id);
+            $query->where(function ($q) use ($receiver_id, $sender_id) {
+                $q->where('sender_id', $sender_id)
+                    ->where('receiver_id', $receiver_id);
+            })->orWhere(function ($q) use ($receiver_id, $sender_id) {
+                $q->where('sender_id', $receiver_id)
+                    ->where('receiver_id', $sender_id);
+            });
         })
             ->where('text', 'LIKE', "%{$keyword}%")
             ->with([
