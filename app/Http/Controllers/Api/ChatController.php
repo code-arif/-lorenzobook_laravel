@@ -681,8 +681,8 @@ class ChatController extends Controller
 
         // Calculate mute expiry
         $muteUntil = match ($request->type) {
-            'disable_sound' => Carbon::create(9999, 12, 31, 23, 59, 59), // Sound only — treated as forever
-            'mute_forever'  => Carbon::create(9999, 12, 31, 23, 59, 59), // Forever
+            'disable_sound' => Carbon::create(2099, 12, 31, 23, 59, 59),
+            'mute_forever'  => Carbon::create(2099, 12, 31, 23, 59, 59),
             'mute_for'      => match ($request->duration) {
                 '1_hour'   => now()->addHour(),
                 '8_hours'  => now()->addHours(8),
@@ -811,13 +811,11 @@ class ChatController extends Controller
 
         $muteUntilCarbon = Carbon::parse($muteUntil);
 
-        // If mute has expired, treat as not muted
         if ($muteUntilCarbon->isPast()) {
             return ['is_muted' => false, 'muted_until' => null];
         }
 
-        // If muted until year 9999, it's "forever"
-        $isForever = $muteUntilCarbon->year >= 9999;
+        $isForever = $muteUntilCarbon->year >= 2099;
 
         return [
             'is_muted'    => true,
