@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('rooms', function (Blueprint $table) {
-            $table->timestamp('user_one_muted_until')->nullable()->after('user_two_id');
-            $table->timestamp('user_two_muted_until')->nullable()->after('user_one_muted_until');
-            $table->timestamp('user_one_deleted_at')->nullable()->after('user_two_muted_until');
-            $table->timestamp('user_two_deleted_at')->nullable()->after('user_one_deleted_at');
+            $table->dateTime('user_one_muted_until')->nullable()->after('user_two_id');
+            $table->dateTime('user_two_muted_until')->nullable()->after('user_one_muted_until');
+            $table->dateTime('user_one_deleted_at')->nullable()->after('user_two_muted_until');
+            $table->dateTime('user_two_deleted_at')->nullable()->after('user_one_deleted_at');
         });
     }
 
