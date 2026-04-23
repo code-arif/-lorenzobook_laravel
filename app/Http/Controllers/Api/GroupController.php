@@ -173,7 +173,7 @@ class GroupController extends Controller
         }
 
         // specific columns select
-        $group->load('members:id,first_name,last_name,cover,mobile_number,last_activity_at,is_online,status');
+        $group->load('members:id,first_name,last_name,cover,mobile_number,last_activity_at,status');
 
         return $this->success([
             'added'   => $added,
