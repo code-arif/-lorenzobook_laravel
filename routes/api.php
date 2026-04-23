@@ -131,9 +131,9 @@ Route::group(['prefix' => 'auth/chat', 'middleware' => 'auth:api'], function () 
     Route::get('/seen/all/{receiver_id}', [ChatController::class, 'seenAll']);
     Route::get('/seen/single/{chat_id}', [ChatController::class, 'seenSingle']);
 
-    Route::get('/conversation/{receiver_id}/search', [ChatController::class, 'searchConversation']);
-    Route::delete('/conversation/{receiver_id}/clear-history', [ChatController::class, 'clearHistory']);
-    Route::delete('/conversation/{receiver_id}/delete', [ChatController::class, 'deleteConversation']);
+    Route::get('/conversation/{receiver_id}/search', [ChatController::class, 'searchConversation']); // done
+    Route::delete('/conversation/{receiver_id}/clear-history', [ChatController::class, 'clearHistory']); // done
+    Route::delete('/conversation/{receiver_id}/delete', [ChatController::class, 'deleteConversation']); // done
     Route::post('/mute/{receiver_id}', [ChatController::class, 'muteConversation']);
     Route::post('/unmute/{receiver_id}', [ChatController::class, 'unmuteConversation']);
 });
