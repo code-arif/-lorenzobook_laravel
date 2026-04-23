@@ -158,6 +158,8 @@ Route::middleware('auth:api')->prefix('auth/group')->group(function () {
     Route::post('/member/unban/{group_id}', [GroupController::class, 'unbanMember']);
     Route::patch('/member/promote/{group_id}/{user_id}', [GroupController::class, 'promoteMember']);
     Route::patch('/member/demote/{group_id}/{user_id}', [GroupController::class, 'demoteMember']);
+
+    Route::get('/search/{group_id}', [GroupController::class, 'searchMessages']);
 });
 
 

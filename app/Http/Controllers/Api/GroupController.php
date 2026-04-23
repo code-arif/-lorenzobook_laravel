@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\User;
-use App\Models\Group;
 use App\Helpers\Helper;
-use App\Traits\ApiResponse;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
+use App\Models\Chat;
+use App\Models\Group;
+use App\Models\User;
+use App\Traits\ApiResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 
@@ -305,5 +306,40 @@ class GroupController extends Controller
         $group->members()->updateExistingPivot($userId, [$flag => $value]);
 
         return $this->success($group->load('members'), $message);
+    }
+
+    public function searchMessages(int $group_id, Request $request): JsonResponse
+    {
+        $keyword = $request->get('keyword');
+
+        if (empty($keyword)) {
+            return $this->error([], 'Keyword is required', 422);
+        }
+
+        $group = Group::find($group_id);
+        if (! $group) {
+            return $this->error([], 'Group not found', 404);
+        }
+
+        // Check if current user is a member
+        $isMember = $group->members()
+            ->where('user_id', auth('api')->id())
+            ->exists();
+
+        if (! $isMember) {
+            return $this->error([], 'You are not a member of this group', 403);
+        }
+
+        $chats = Chat::where('group_id', $group_id)
+            ->where('text', 'LIKE', "%{$keyword}%")
+            ->with(['sender:id,first_name,last_name,cover'])
+            ->orderBy('created_at')
+            ->get();
+
+        return $this->success([
+            'keyword' => $keyword,
+            'count'   => $chats->count(),
+            'chats'   => $chats,
+        ], 'Search results retrieved successfully');
     }
 }
