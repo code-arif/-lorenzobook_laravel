@@ -681,8 +681,8 @@ class ChatController extends Controller
 
         // Calculate mute expiry
         $muteUntil = match ($request->type) {
-            'disable_sound' => '2099-12-31 23:59:59',  // directly string
-            'mute_forever'  => '2099-12-31 23:59:59',  // directly string
+            'disable_sound' => '2099-12-31 23:59:59',
+            'mute_forever'  => '2099-12-31 23:59:59',
             'mute_for'      => match ($request->duration) {
                 '1_hour'   => now()->addHour()->toDateTimeString(),
                 '8_hours'  => now()->addHours(8)->toDateTimeString(),
