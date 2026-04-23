@@ -681,14 +681,14 @@ class ChatController extends Controller
 
         // Calculate mute expiry
         $muteUntil = match ($request->type) {
-            'disable_sound' => Carbon::create(2099, 12, 31, 23, 59, 59),
-            'mute_forever'  => Carbon::create(2099, 12, 31, 23, 59, 59),
+            'disable_sound' => '2099-12-31 23:59:59',  // directly string
+            'mute_forever'  => '2099-12-31 23:59:59',  // directly string
             'mute_for'      => match ($request->duration) {
-                '1_hour'   => now()->addHour(),
-                '8_hours'  => now()->addHours(8),
-                '24_hours' => now()->addDay(),
-                '1_week'   => now()->addWeek(),
-                default    => now()->addHour(),
+                '1_hour'   => now()->addHour()->toDateTimeString(),
+                '8_hours'  => now()->addHours(8)->toDateTimeString(),
+                '24_hours' => now()->addDay()->toDateTimeString(),
+                '1_week'   => now()->addWeek()->toDateTimeString(),
+                default    => now()->addHour()->toDateTimeString(),
             },
         };
 
