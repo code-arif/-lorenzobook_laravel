@@ -143,7 +143,6 @@ class GroupController extends Controller
     }
 
     // ─── Member Management ────────────────────────────────────────────────────
-
     public function addMember(Request $request, int $group_id): JsonResponse
     {
         $group = Group::with('members:id')->find($group_id);

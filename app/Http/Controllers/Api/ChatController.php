@@ -356,10 +356,20 @@ class ChatController extends Controller
      */
     public function send($receiver_id, Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'text' => 'nullable|string|max:5000',  // Increase to 5000 chars
-            'file' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,wmv,pdf,doc,docx,zip,txt|max:10240',
-        ]);
+        // Dynamically build validation rules to support both single and multiple files
+        $rules = [
+            'text' => 'nullable|string|max:5000',
+        ];
+
+        if ($request->hasFile('file')) {
+            if (is_array($request->file('file'))) {
+                $rules['file.*'] = 'file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,wmv,pdf,doc,docx,zip,txt,mp3,wav,ogg,m4a,webm,3gp,aac,amr|max:51200';
+            } else {
+                $rules['file'] = 'file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,wmv,pdf,doc,docx,zip,txt,mp3,wav,ogg,m4a,webm,3gp,aac,amr|max:51200';
+            }
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->first()], 400);
@@ -385,31 +395,55 @@ class ChatController extends Controller
             ]);
         }
 
-        $file = null;
-        if ($request->hasFile('file')) {
-            $file = Helper::fileUpload($request->file('file'), 'chat', time() . '_' . getFileName($request->file('file')));
+        $files = $request->file('file');
+        if ($files && !is_array($files)) {
+            $files = [$files];
         }
 
-        $chat = Chat::create([
-            'sender_id'   => $sender_id,
-            'receiver_id' => $receiver_id,
-            'text'        => $request->text,
-            'file'        => $file,
-            'room_id'     => $room->id,
-            'status'      => 'sent',
-        ]);
+        $chats = [];
 
-        //* Load the sender's information
-        $chat->load([
-            'sender:id,first_name,last_name,mobile_number,cover,last_activity_at',
-            'receiver:id,first_name,last_name,mobile_number,cover,last_activity_at',
-            'room:id,user_one_id,user_two_id',
-        ]);
+        if (empty($files)) {
+            if (!$request->text) {
+                return response()->json(['message' => 'Please provide text or file'], 400);
+            }
 
-        broadcast(new MessageSendEvent($chat))->toOthers();
+            $chat = Chat::create([
+                'sender_id'   => $sender_id,
+                'receiver_id' => $receiver_id,
+                'text'        => $request->text,
+                'file'        => null,
+                'room_id'     => $room->id,
+                'status'      => 'sent',
+            ]);
+            $chats[] = $chat;
+        } else {
+            foreach ($files as $index => $file) {
+                $uploadedFile = Helper::fileUpload($file, 'chat', time() . '_' . getFileName($file));
+
+                $chat = Chat::create([
+                    'sender_id'   => $sender_id,
+                    'receiver_id' => $receiver_id,
+                    'text'        => ($index === 0 && $request->text) ? $request->text : null,
+                    'file'        => $uploadedFile,
+                    'room_id'     => $room->id,
+                    'status'      => 'sent',
+                ]);
+                $chats[] = $chat;
+            }
+        }
+
+        foreach ($chats as $chat) {
+            $chat->load([
+                'sender:id,first_name,last_name,mobile_number,cover,last_activity_at',
+                'receiver:id,first_name,last_name,mobile_number,cover,last_activity_at',
+                'room:id,user_one_id,user_two_id',
+            ]);
+            broadcast(new MessageSendEvent($chat))->toOthers();
+        }
 
         $data = [
-            'chat' => $chat,
+            'chat' => $chats[0] ?? null,
+            'chats' => $chats,
         ];
 
         return response()->json([
