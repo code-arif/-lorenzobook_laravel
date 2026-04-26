@@ -147,8 +147,10 @@ class ChatController extends Controller
                 }
             }
 
-            // ── NEW: Check mute status for current user ──
+            // Check mute status for current user
             $muteStatus = $room ? $this->getMuteStatus($room, $user->id) : ['is_muted' => false, 'muted_until' => null];
+
+            $total_unread_count = Chat::where('receiver_id', $user->id)->where('is_read', 0)->count();
 
             return [
                 'id'               => $u->id,
@@ -163,8 +165,9 @@ class ChatController extends Controller
                 'humanize_date'    => $u->chats()->latest()->first()?->created_at->diffForHumans() ?? '',
                 'created_by'       => $u->first_name . ' ' . $u->last_name,
                 'type'             => 'single_chat_user',
-                'is_muted'         => $muteStatus['is_muted'],           // NEW
-                'muted_until'      => $muteStatus['muted_until'],        // NEW (null = forever if is_muted=true)
+                'is_muted'         => $muteStatus['is_muted'], // NEW
+                'muted_until'      => $muteStatus['muted_until'], // NEW (null = forever if is_muted=true)
+                'total_unread_count' => $total_unread_count,
             ];
         })->filter()->values(); // filter() removes null (deleted conversations)
 

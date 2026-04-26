@@ -75,6 +75,9 @@ class GroupController extends Controller
         return $this->success($group->load('members'), 'Group created successfully', 201);
     }
 
+    /**
+     * Group Details
+     */
     public function show(int $group_id): JsonResponse
     {
         $group = Group::with(['members:id,first_name,last_name,cover,last_activity_at', 'createdBy:id,first_name,last_name,cover,last_activity_at'])
@@ -88,6 +91,9 @@ class GroupController extends Controller
         return $this->success($group, 'Group retrieved successfully.');
     }
 
+    /**
+     * Group Update
+     */
     public function update(Request $request, int $group_id): JsonResponse
     {
         $group = Group::find($group_id);
@@ -123,7 +129,9 @@ class GroupController extends Controller
         return $this->success($group, 'Group updated successfully.');
     }
 
-    // Group Delete
+    /**
+     * Group Delete
+     */
     public function destroy(int $group_id): JsonResponse
     {
         $group = Group::find($group_id);
