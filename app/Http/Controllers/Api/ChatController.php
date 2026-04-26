@@ -185,6 +185,7 @@ class ChatController extends Controller
                 'last_message'     => null,
                 'humanize_date'    => null,
                 'type'             => 'group',
+                'total_unread_count' => Chat::where('group_id', $group->id)->where('is_read', 0)->count(),
             ];
         });
 
