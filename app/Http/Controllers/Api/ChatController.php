@@ -139,7 +139,7 @@ class ChatController extends Controller
                 $q->where('user_one_id', $u->id)->where('user_two_id', $user->id);
             })->first();
 
-            // ── NEW: Skip if current user has "deleted" this conversation ──
+            // Skip if current user has "deleted" this conversation
             if ($room) {
                 $deletedAt = $this->getUserDeletedAt($room, $user->id);
                 if ($deletedAt !== null) {
