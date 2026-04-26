@@ -150,7 +150,7 @@ class ChatController extends Controller
             // Check mute status for current user
             $muteStatus = $room ? $this->getMuteStatus($room, $user->id) : ['is_muted' => false, 'muted_until' => null];
 
-            $total_unread_count = Chat::where('receiver_id', $user->id)->where('is_read', 0)->count();
+            $total_unread_count = Chat::where('receiver_id', $user->id)->where('status', 'unread')->count();
 
             return [
                 'id'               => $u->id,
@@ -185,7 +185,7 @@ class ChatController extends Controller
                 'last_message'     => null,
                 'humanize_date'    => null,
                 'type'             => 'group',
-                'total_unread_count' => Chat::where('group_id', $group->id)->where('is_read', 0)->count(),
+                'total_unread_count' => Chat::where('group_id', $group->id)->where('status', 'unread')->count(),
             ];
         });
 
