@@ -142,8 +142,6 @@ Route::middleware('auth:api')->prefix('auth/group')->group(function () {
     Route::post('/member/unban/{group_id}', [GroupController::class, 'unbanMember']);
     Route::patch('/member/promote/{group_id}/{user_id}', [GroupController::class, 'promoteMember']);
     Route::patch('/member/demote/{group_id}/{user_id}', [GroupController::class, 'demoteMember']);
-
-    Route::get('/search/{group_id}', [GroupController::class, 'searchMessages']);
 });
 
 // Group Chat
@@ -156,6 +154,7 @@ Route::middleware('auth:api')->prefix('group/chat')->group(function () {
     Route::delete('/message/delete/{message_id}', [GroupChatController::class, 'deleteGroupMessage']); // done
     Route::post('/messages/delete-multiple', [GroupChatController::class, 'deleteMultipleGroupMessages']); // done
     Route::get('/messages/{group_id}/media', [GroupChatController::class, 'getGroupMedia']);
+    Route::get('/search/{group_id}', [GroupChatController::class, 'searchGroupMessages']);
 });
 
 // channel management

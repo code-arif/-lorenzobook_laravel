@@ -306,4 +306,40 @@ class GroupChatController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Search messages within a specific group.
+     * GET /api/group/chat/search/{group_id}?keyword=hello
+     */
+    public function searchGroupMessages(int $group_id, Request $request): JsonResponse
+    {
+        $userId = auth('api')->id();
+        $group  = Group::forUser($userId)->find($group_id);
+
+        if (!$group) {
+            return response()->json(['success' => false, 'message' => 'Group not found or you are not a member.'], 404);
+        }
+
+        $keyword = $request->get('keyword');
+
+        if (empty($keyword)) {
+            return response()->json(['success' => false, 'message' => 'Keyword is required'], 422);
+        }
+
+        $chats = Chat::where('group_id', $group_id)
+            ->where('text', 'LIKE', "%{$keyword}%")
+            ->with(['sender:id,first_name,last_name,cover'])
+            ->orderBy('created_at')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Search results retrieved successfully',
+            'data'    => [
+                'keyword' => $keyword,
+                'count'   => $chats->count(),
+                'chats'   => $chats,
+            ],
+        ]);
+    }
 }
