@@ -120,6 +120,7 @@ Route::group(['prefix' => 'auth/chat', 'middleware' => 'auth:api'], function () 
     // delete specific message
     Route::delete('/message/{message_id}/delete', [ChatController::class, 'deleteMessage']);
     Route::post('/messages/delete-multiple', [ChatController::class, 'deleteMultipleMessages']);
+    Route::get('/conversation/{receiver_id}/media', [ChatController::class, 'getConversationMedia']);
 });
 
 // group chat manage
@@ -154,6 +155,7 @@ Route::middleware('auth:api')->prefix('group/chat')->group(function () {
     Route::delete('/clear-history/{group_id}', [GroupChatController::class, 'clearGroupChatHistory']); // done
     Route::delete('/message/delete/{message_id}', [GroupChatController::class, 'deleteGroupMessage']); // done
     Route::post('/messages/delete-multiple', [GroupChatController::class, 'deleteMultipleGroupMessages']); // done
+    Route::get('/messages/{group_id}/media', [GroupChatController::class, 'getGroupMedia']);
 });
 
 // channel management

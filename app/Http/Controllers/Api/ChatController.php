@@ -445,6 +445,97 @@ class ChatController extends Controller
 
 
     /**
+     * Get media shared in a conversation.
+     * GET /auth/chat/conversation/{receiver_id}/media?type=media|files|voice|links|gifs
+     */
+    public function getConversationMedia($receiver_id, Request $request): JsonResponse
+    {
+        $sender_id = Auth::guard('api')->id();
+        $type      = $request->get('type', 'media');
+
+        $query = Chat::where(function ($q) use ($receiver_id, $sender_id) {
+            $q->where(function ($sub) use ($receiver_id, $sender_id) {
+                $sub->where('sender_id', $sender_id)->where('receiver_id', $receiver_id);
+            })->orWhere(function ($sub) use ($receiver_id, $sender_id) {
+                $sub->where('sender_id', $receiver_id)->where('receiver_id', $sender_id);
+            });
+        });
+
+        // Apply filters based on type
+        switch ($type) {
+            case 'media':
+                $query->where(function ($q) {
+                    $q->where('file', 'LIKE', '%.jpeg')
+                        ->orWhere('file', 'LIKE', '%.png')
+                        ->orWhere('file', 'LIKE', '%.jpg')
+                        ->orWhere('file', 'LIKE', '%.mp4')
+                        ->orWhere('file', 'LIKE', '%.mov')
+                        ->orWhere('file', 'LIKE', '%.avi')
+                        ->orWhere('file', 'LIKE', '%.wmv');
+                });
+                break;
+
+            case 'files':
+                $query->where(function ($q) {
+                    $q->where('file', 'LIKE', '%.pdf')
+                        ->orWhere('file', 'LIKE', '%.doc')
+                        ->orWhere('file', 'LIKE', '%.docx')
+                        ->orWhere('file', 'LIKE', '%.zip')
+                        ->orWhere('file', 'LIKE', '%.txt');
+                });
+                break;
+
+            case 'voice':
+                $query->where(function ($q) {
+                    $q->where('file', 'LIKE', '%.mp3')
+                        ->orWhere('file', 'LIKE', '%.wav')
+                        ->orWhere('file', 'LIKE', '%.ogg')
+                        ->orWhere('file', 'LIKE', '%.m4a')
+                        ->orWhere('file', 'LIKE', '%.webm')
+                        ->orWhere('file', 'LIKE', '%.aac')
+                        ->orWhere('file', 'LIKE', '%.amr');
+                });
+                break;
+
+            case 'gifs':
+                $query->where('file', 'LIKE', '%.gif');
+                break;
+
+            case 'links':
+                $query->where(function ($q) {
+                    $q->where('text', 'LIKE', '%http://%')
+                        ->orWhere('text', 'LIKE', '%https://%');
+                });
+                break;
+
+            case 'posts':
+                // Assuming posts are shared via specific links
+                $query->where('text', 'LIKE', '%/post/show/%');
+                break;
+
+            default:
+                return response()->json(['success' => false, 'message' => 'Invalid type'], 422);
+        }
+
+        $media = $query->latest()->paginate($request->get('per_page', 20));
+
+        return response()->json([
+            'success' => true,
+            'message' => ucfirst($type) . ' retrieved successfully',
+            'data'    => [
+                'type'       => $type,
+                'media'      => $media->items(),
+                'pagination' => [
+                    'current_page' => $media->currentPage(),
+                    'last_page'    => $media->lastPage(),
+                    'per_page'     => $media->perPage(),
+                    'total'        => $media->total(),
+                ],
+            ],
+        ]);
+    }
+
+    /**
      * Clear all chat history between two users (deletes messages + media files).
      * This affects BOTH sides of the conversation.
      * DELETE /auth/chat/conversation/{receiver_id}/clear-history

@@ -217,4 +217,93 @@ class GroupChatController extends Controller
             'message' => count($chats) . ' messages deleted successfully.',
         ]);
     }
+
+    /**
+     * Get media shared in a group.
+     * GET /api/group/chat/messages/{group_id}/media?type=media|files|voice|links|gifs
+     */
+    public function getGroupMedia(int $group_id, Request $request): JsonResponse
+    {
+        $userId = auth('api')->id();
+        $group  = Group::forUser($userId)->find($group_id);
+
+        if (!$group) {
+            return response()->json(['success' => false, 'message' => 'Group not found or you are not a member.'], 404);
+        }
+
+        $type = $request->get('type', 'media');
+        $query = Chat::where('group_id', $group_id);
+
+        // Apply filters based on type
+        switch ($type) {
+            case 'media':
+                $query->where(function ($q) {
+                    $q->where('file', 'LIKE', '%.jpeg')
+                        ->orWhere('file', 'LIKE', '%.png')
+                        ->orWhere('file', 'LIKE', '%.jpg')
+                        ->orWhere('file', 'LIKE', '%.mp4')
+                        ->orWhere('file', 'LIKE', '%.mov')
+                        ->orWhere('file', 'LIKE', '%.avi')
+                        ->orWhere('file', 'LIKE', '%.wmv');
+                });
+                break;
+
+            case 'files':
+                $query->where(function ($q) {
+                    $q->where('file', 'LIKE', '%.pdf')
+                        ->orWhere('file', 'LIKE', '%.doc')
+                        ->orWhere('file', 'LIKE', '%.docx')
+                        ->orWhere('file', 'LIKE', '%.zip')
+                        ->orWhere('file', 'LIKE', '%.txt');
+                });
+                break;
+
+            case 'voice':
+                $query->where(function ($q) {
+                    $q->where('file', 'LIKE', '%.mp3')
+                        ->orWhere('file', 'LIKE', '%.wav')
+                        ->orWhere('file', 'LIKE', '%.ogg')
+                        ->orWhere('file', 'LIKE', '%.m4a')
+                        ->orWhere('file', 'LIKE', '%.webm')
+                        ->orWhere('file', 'LIKE', '%.aac')
+                        ->orWhere('file', 'LIKE', '%.amr');
+                });
+                break;
+
+            case 'gifs':
+                $query->where('file', 'LIKE', '%.gif');
+                break;
+
+            case 'links':
+                $query->where(function ($q) {
+                    $q->where('text', 'LIKE', '%http://%')
+                        ->orWhere('text', 'LIKE', '%https://%');
+                });
+                break;
+
+            case 'posts':
+                $query->where('text', 'LIKE', '%/post/show/%');
+                break;
+
+            default:
+                return response()->json(['success' => false, 'message' => 'Invalid type'], 422);
+        }
+
+        $media = $query->latest()->paginate($request->get('per_page', 20));
+
+        return response()->json([
+            'success' => true,
+            'message' => ucfirst($type) . ' retrieved successfully',
+            'data'    => [
+                'type'       => $type,
+                'media'      => $media->items(),
+                'pagination' => [
+                    'current_page' => $media->currentPage(),
+                    'last_page'    => $media->lastPage(),
+                    'per_page'     => $media->perPage(),
+                    'total'        => $media->total(),
+                ],
+            ],
+        ]);
+    }
 }
