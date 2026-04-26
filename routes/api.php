@@ -88,13 +88,15 @@ Route::middleware(['auth:api'])->controller(NotificationController::class)->pref
     Route::get('status/read/{id}', 'readSingle');
 })->middleware('auth:api');
 
-Route::middleware(['auth:api'])->controller(FriendController::class)->prefix('auth/friend')->group(function () {
-
-    Route::get('/list', 'list');
-    Route::post('/send', 'send');
-
-    // friend details
-    Route::get('/details/{id}', 'details');
+/**
+ * Friend Route
+ */
+Route::group(['prefix' => 'auth/friend', 'middleware' => 'auth:api'], function ($router) {
+    Route::get('/list', [FriendController::class, 'list']);
+    Route::get('/list-with-check', [FriendController::class, 'listWithGroupCheck']);
+    Route::post('/send', [FriendController::class, 'send']);
+    
+    Route::get('/details/{id}', [FriendController::class, 'details']);
 });
 
 /*

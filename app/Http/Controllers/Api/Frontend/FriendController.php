@@ -2,30 +2,55 @@
 
 namespace App\Http\Controllers\Api\Frontend;
 
-use App\Models\User;
+use App\Http\Controllers\Controller;
 use App\Models\Friend;
+use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 
 class FriendController extends Controller
 {
     use ApiResponse;
 
-
+    /**
+     * Get friend list
+     */
     public function list(){
-
         $friends = Friend::with('friend')->where('user_id', auth('api')->user()->id)->get() ;
-
         return $this->success($friends, 'Friend list fetched successfully');
-
     }
 
+    /**
+     * Get friend list with group check (excludes friends already in the group)
+     */
+    public function listWithGroupCheck(Request $request)
+    {
+        $userId = auth('api')->id();
+        $groupId = $request->group_id;
 
+        $query = Friend::with('friend')->where('user_id', $userId);
+
+        if ($groupId) {
+            $memberIds = DB::table('group_members')
+                ->where('group_id', $groupId)
+                ->pluck('user_id')
+                ->toArray();
+
+            $query->whereNotIn('friend_id', $memberIds);
+        }
+
+        $friends = $query->get();
+
+        return $this->success($friends, 'Friend list fetched successfully');
+    }
+
+    /**
+     * Send friend request
+     */
     public function send(Request $request)
     {
         $user_id = auth('api')->id();
-
         $receiverId = $request->receiver_id;
 
         if ($user_id == $receiverId) {
@@ -42,8 +67,6 @@ class FriendController extends Controller
 
         if ($existing) {
             return $this->error($existing, 'Friend request already exists or already friends', 422);
-
-            // return response()->json(['message' => 'Friend request already exists or already friends.'], 409);
         }
 
         $friend =  Friend::create([
@@ -52,12 +75,12 @@ class FriendController extends Controller
             'status' => 'accepted'
         ]);
 
-
         return $this->success($friend, 'Friend add to contacts', 201);
     }
 
-
-
+    /**
+     * Get friend details
+     */
     public function details($id)
     {
         $user = User::find($id);
@@ -65,8 +88,6 @@ class FriendController extends Controller
         if (!$user) {
             return $this->error([], 'User  not found', 404);
         }
-
-
 
         $data = [
             'id' => $user->id,
@@ -79,7 +100,6 @@ class FriendController extends Controller
                 ->where('friend_id', $id)
                 ->exists(),
         ];
-
 
         return $this->success($data, 'Friend details fetched successfully');
     }
