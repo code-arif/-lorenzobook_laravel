@@ -152,55 +152,6 @@ class ChatController extends Controller
     /**
      ** Get messages between the authenticated user and another user
      */
-    // public function conversation($receiver_id): JsonResponse
-    // {
-    //     $sender_id = Auth::guard('api')->id();
-
-    //     Chat::where('receiver_id', $sender_id)->where('sender_id', $receiver_id)->update(['status' => 'read']);
-
-    //     $chat = Chat::query()
-    //         ->where(function ($query) use ($receiver_id, $sender_id) {
-    //             $query->where('sender_id', $sender_id)->where('receiver_id', $receiver_id);
-    //         })
-    //         ->orWhere(function ($query) use ($receiver_id, $sender_id) {
-    //             $query->where('sender_id', $receiver_id)->where('receiver_id', $sender_id);
-    //         })
-    //         ->with([
-    //             'sender:id,first_name,last_name,mobile_number,cover,last_activity_at',
-    //             'receiver:id,first_name,last_name,mobile_number,cover,last_activity_at',
-    //             'room:id,user_one_id,user_two_id',
-    //         ])
-    //         ->orderBy('created_at')
-    //         ->limit(50)
-    //         ->get();
-
-    //     $room = Room::where(function ($query) use ($receiver_id, $sender_id) {
-    //         $query->where('user_one_id', $receiver_id)->where('user_two_id', $sender_id);
-    //     })->orWhere(function ($query) use ($receiver_id, $sender_id) {
-    //         $query->where('user_one_id', $sender_id)->where('user_two_id', $receiver_id);
-    //     })->first();
-
-    //     if (! $room) {
-    //         $room = Room::create([
-    //             'user_one_id' => $sender_id,
-    //             'user_two_id' => $receiver_id,
-    //         ]);
-    //     }
-
-    //     $data = [
-    //         'receiver' => User::select('id', 'first_name', 'last_name', 'mobile_number', 'cover', 'last_activity_at')->where('id', $receiver_id)->first(),
-    //         'sender'   => User::select('id', 'first_name', 'last_name', 'mobile_number', 'cover', 'last_activity_at')->where('id', $sender_id)->first(),
-    //         'room'     => $room,
-    //         'chat'     => $chat,
-    //     ];
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Messages retrieved successfully',
-    //         'data'    => $data,
-    //         'code'    => 200,
-    //     ]);
-    // }
 
     public function conversation($receiver_id): JsonResponse
     {
