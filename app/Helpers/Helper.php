@@ -135,10 +135,9 @@ class Helper
     }
 
     // generate username
-    public static function generateUsername($name)
+    public static function generateUsername($mobile_number)
     {
-        $username = strtolower(str_replace(' ', '_', $name));
-        $username = substr($username, 0, 20);
+        $username = 'user' . $mobile_number;
         while (User::where('username', $username)->exists()) {
             $username .= rand(1, 99);
         }
