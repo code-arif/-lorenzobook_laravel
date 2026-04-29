@@ -53,8 +53,6 @@ Route::middleware(['auth:api'])->controller(ImageController::class)->prefix('aut
 /**
  * Auth Route
  */
-Route::get('/check-username', [UserController::class, 'checkUsername']);
-
 Route::group(['middleware' => 'guest:api'], function ($router) {
     Route::post('register', [RegisterController::class, 'register']);
     Route::post('/verify-mobile-otp', [RegisterController::class, 'verifyPhoneOtp']);
@@ -68,6 +66,7 @@ Route::group(['middleware' => 'auth:api'], function ($router) {
     Route::get('/user/list', [UserController::class, 'user_list']);
     Route::get('/logout', [LogoutController::class, 'logout']);
     Route::post('/update-username', [UserController::class, 'updateUsername']);
+    Route::get('/check-username', [UserController::class, 'checkUsername']);
 });
 
 /*
