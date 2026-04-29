@@ -53,6 +53,8 @@ Route::middleware(['auth:api'])->controller(ImageController::class)->prefix('aut
 /**
  * Auth Route
  */
+Route::get('/check-username', [UserController::class, 'checkUsername']);
+
 Route::group(['middleware' => 'guest:api'], function ($router) {
     Route::post('register', [RegisterController::class, 'register']);
     Route::post('/verify-mobile-otp', [RegisterController::class, 'verifyPhoneOtp']);

@@ -121,4 +121,24 @@ class UserController extends Controller
         $data = User::select($this->select)->with('roles')->find($user->id);
         return Helper::jsonResponse(true, 'Username updated successfully', 200, $data);
     }
+
+    // check username availability
+    public function checkUsername(Request $request)
+    {
+        $request->validate([
+            'username' => 'required|string|max:100',
+        ]);
+
+        $query = User::where('username', $request->username);
+
+        if (auth('api')->check()) {
+            $query->where('id', '!=', auth('api')->id());
+        }
+
+        if ($query->exists()) {
+            return Helper::jsonResponse(false, 'Username is already taken', 200, ['available' => false]);
+        }
+
+        return Helper::jsonResponse(true, 'Username is available', 200, ['available' => true]);
+    }
 }
