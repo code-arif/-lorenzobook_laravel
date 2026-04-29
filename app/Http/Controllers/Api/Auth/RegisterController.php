@@ -119,10 +119,19 @@ class RegisterController extends Controller
             $user->save();
 
             $token = JWTAuth::fromUser($user);
-            $user->token = $token;
-            $user->is_new_user = empty($user->first_name) || empty($user->last_name);
+            
+            $data = [
+                'id' => $user->id,
+                'username' => $user->username,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'mobile_number' => $user->mobile_number,
+                'cover' => $user->cover,
+                'token' => $token,
+                'is_new_user' => empty($user->first_name) || empty($user->last_name),
+            ];
 
-            return $this->success($user, 'Phone verification successful.');
+            return $this->success($data, 'Phone verification successful.');
         } catch (Exception $e) {
             return $this->error([], $e->getMessage(), 500);
         }
