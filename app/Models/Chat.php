@@ -91,6 +91,11 @@ class Chat extends Model
         return $this->belongsTo(Group::class, 'group_id', 'id');
     }
 
+    public function media()
+    {
+        return $this->hasMany(ChatMedia::class);
+    }
+
     // ─── Accessors ────────────────────────────────────────────────────────────
     public function getFileUrlAttribute(): ?string
     {

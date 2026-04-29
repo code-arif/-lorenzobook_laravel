@@ -170,6 +170,7 @@ class ChatController extends Controller
                 'sender:id,first_name,last_name,mobile_number,cover,last_activity_at',
                 'receiver:id,first_name,last_name,mobile_number,cover,last_activity_at',
                 'room:id,user_one_id,user_two_id',
+                'media'
             ])
             ->orderBy('created_at');
 
@@ -264,56 +265,46 @@ class ChatController extends Controller
             $files = [$files];
         }
 
-        $chats = [];
+        // Create a single chat message for the whole set of media/text
+        $chat = Chat::create([
+            'sender_id'   => $sender_id,
+            'receiver_id' => $receiver_id,
+            'text'        => $request->text,
+            'room_id'     => $room->id,
+            'status'      => 'sent',
+        ]);
 
-        if (empty($files)) {
-            if (!$request->text) {
-                return response()->json(['message' => 'Please provide text or file'], 400);
-            }
-
-            $chat = Chat::create([
-                'sender_id'   => $sender_id,
-                'receiver_id' => $receiver_id,
-                'text'        => $request->text,
-                'file'        => null,
-                'room_id'     => $room->id,
-                'status'      => 'sent',
-            ]);
-            $chats[] = $chat;
-        } else {
+        if (!empty($files)) {
             foreach ($files as $index => $file) {
                 $uploadedFile = Helper::fileUpload($file, 'chat', time() . '_' . getFileName($file));
-
-                $chat = Chat::create([
-                    'sender_id'   => $sender_id,
-                    'receiver_id' => $receiver_id,
-                    'text'        => ($index === 0 && $request->text) ? $request->text : null,
-                    'file'        => $uploadedFile,
-                    'room_id'     => $room->id,
-                    'status'      => 'sent',
+                
+                // Save to chat_media table
+                $chat->media()->create([
+                    'file' => $uploadedFile,
                 ]);
-                $chats[] = $chat;
+
+                // For backward compatibility, save the first file in the 'file' column of the chats table
+                if ($index === 0) {
+                    $chat->update(['file' => $uploadedFile]);
+                }
             }
         }
 
-        foreach ($chats as $chat) {
-            $chat->load([
-                'sender:id,first_name,last_name,mobile_number,cover,last_activity_at',
-                'receiver:id,first_name,last_name,mobile_number,cover,last_activity_at',
-                'room:id,user_one_id,user_two_id',
-            ]);
-            broadcast(new MessageSendEvent($chat))->toOthers();
-        }
+        $chat->load([
+            'sender:id,first_name,last_name,mobile_number,cover,last_activity_at',
+            'receiver:id,first_name,last_name,mobile_number,cover,last_activity_at',
+            'room:id,user_one_id,user_two_id',
+            'media'
+        ]);
 
-        $data = [
-            'chat' => $chats[0] ?? null,
-            'chats' => $chats,
-        ];
+        broadcast(new MessageSendEvent($chat))->toOthers();
 
         return response()->json([
             'success' => true,
             'message' => 'Message sent successfully',
-            'data'    => $data,
+            'data'    => [
+                'chat' => $chat,
+            ],
             'code'    => 200,
         ]);
     }
@@ -428,6 +419,7 @@ class ChatController extends Controller
             ->with([
                 'sender:id,first_name,last_name,cover',
                 'receiver:id,first_name,last_name,cover',
+                'media',
             ])
             ->orderBy('created_at')
             ->get();

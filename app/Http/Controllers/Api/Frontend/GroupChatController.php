@@ -19,10 +19,19 @@ class GroupChatController extends Controller
      */
     public function sendGroupMessage(int $group_id, Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
+        $rules = [
             'text' => 'nullable|string|max:1000',
-            'file' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,wmv,pdf,doc,docx,zip,txt|max:10240',
-        ]);
+        ];
+
+        if ($request->hasFile('file')) {
+            if (is_array($request->file('file'))) {
+                $rules['file.*'] = 'file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,wmv,pdf,doc,docx,zip,txt|max:51200';
+            } else {
+                $rules['file'] = 'file|mimes:jpeg,png,jpg,gif,mp4,mov,avi,wmv,pdf,doc,docx,zip,txt|max:51200';
+            }
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
@@ -45,27 +54,36 @@ class GroupChatController extends Controller
             return response()->json(['success' => false, 'message' => 'You are banned from this group.'], 403);
         }
 
-        $file = null;
-        if ($request->hasFile('file')) {
-            $file = Helper::fileUpload(
-                $request->file('file'),
-                'chat',
-                time() . '_' . getFileName($request->file('file'))
-            );
+        $files = $request->file('file');
+        if ($files && !is_array($files)) {
+            $files = [$files];
         }
 
         $chat = Chat::create([
             'sender_id'   => $senderId,
-            'receiver_id' => null,       // No receiver for group messages
-            'group_id'    => $group->id, // FIX: was 'room_id' previously
+            'receiver_id' => null,
+            'group_id'    => $group->id,
             'text'        => $request->text,
-            'file'        => $file,
             'status'      => 'sent',
         ]);
 
+        if (!empty($files)) {
+            foreach ($files as $index => $file) {
+                $uploadedFile = Helper::fileUpload($file, 'chat', time() . '_' . getFileName($file));
+                
+                $chat->media()->create([
+                    'file' => $uploadedFile,
+                ]);
+
+                if ($index === 0) {
+                    $chat->update(['file' => $uploadedFile]);
+                }
+            }
+        }
+
         $group->update(['last_activity_at' => now()]);
 
-        $chat->load(['sender:id,first_name,last_name,cover,last_activity_at', 'group:id,name,image_url']);
+        $chat->load(['sender:id,first_name,last_name,cover,last_activity_at', 'group:id,name,image_url', 'media']);
 
         broadcast(new GroupMessageSentEvent($chat))->toOthers();
 
@@ -89,7 +107,7 @@ class GroupChatController extends Controller
         }
 
         $messages = Chat::where('group_id', $group_id)
-            ->with(['sender:id,first_name,last_name,cover,last_activity_at'])
+            ->with(['sender:id,first_name,last_name,cover,last_activity_at', 'media'])
             ->latest()
             ->paginate($request->integer('per_page', 30));
 
@@ -328,7 +346,7 @@ class GroupChatController extends Controller
 
         $chats = Chat::where('group_id', $group_id)
             ->where('text', 'LIKE', "%{$keyword}%")
-            ->with(['sender:id,first_name,last_name,cover'])
+            ->with(['sender:id,first_name,last_name,cover', 'media'])
             ->orderBy('created_at')
             ->get();
 
