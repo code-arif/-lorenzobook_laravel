@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
-use Exception;
-use Carbon\Carbon;
-use App\Models\User;
-use Illuminate\Http\Request;
-use App\Services\TwilioService;
-use Illuminate\Support\Facades\DB;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Validator;
+use App\Models\User;
+use App\Services\TwilioService;
 use App\Traits\ApiResponse;
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class RegisterController extends Controller
 {
@@ -53,6 +54,7 @@ class RegisterController extends Controller
                     'cover' => $user->cover,
                     'mobile_number' => $user->mobile_number,
                     'otp' => $user->otp,
+                    'username' => $user->username,
                 ];
 
 
@@ -63,12 +65,12 @@ class RegisterController extends Controller
                     'mobile_number' => $request->input('mobile_number'),
                     'otp' => $otp,
                     'otp_expires_at' => $otpExpiresAt,
+                    'username' => Helper::generateUsername($request->mobile_number),
                 ]);
             }
 
             // Send OTP via Twilio
             // $twilio->sendOtp($user->mobile_number, $otp);
-
 
             $data = [
                 'user_id' => $user->id,
@@ -77,8 +79,8 @@ class RegisterController extends Controller
                 'cover' => $user->cover,
                 'mobile_number' => $user->mobile_number,
                 'otp' => $user->otp,
+                'username' => $user->username,
             ];
-
 
             return $this->success($data, 'New User, OTP sent to your phone number.');
         } catch (Exception $e) {

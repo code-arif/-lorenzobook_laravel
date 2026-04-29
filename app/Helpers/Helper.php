@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Models\User;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -131,5 +132,16 @@ class Helper
             Log::error($exception->getMessage());
         }
         return;
+    }
+
+    // generate username
+    public static function generateUsername($name)
+    {
+        $username = strtolower(str_replace(' ', '_', $name));
+        $username = substr($username, 0, 20);
+        while (User::where('username', $username)->exists()) {
+            $username .= rand(1, 99);
+        }
+        return $username;
     }
 }
