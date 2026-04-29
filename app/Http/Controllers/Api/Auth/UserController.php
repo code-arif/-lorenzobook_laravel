@@ -13,7 +13,7 @@ class UserController extends Controller
     public $select;
     public function __construct()
     {
-        $this->select = ['id', 'first_name', 'last_name', 'cover', 'mobile_number'];
+        $this->select = ['id', 'first_name', 'last_name', 'username', 'cover', 'mobile_number'];
     }
 
     public function me()
