@@ -26,7 +26,7 @@ class ChatController extends Controller
         $user = auth('api')->user();
 
         $chats = $user->chats()
-            ->with(['sender:id,first_name,last_name', 'receiver:id,first_name,last_name'])
+            ->with(['sender:id,first_name,last_name,cover,mobile_number,last_activity_at', 'receiver:id,first_name,last_name,cover,mobile_number,last_activity_at'])
             ->orderBy('created_at', 'desc')
             ->get();
 
