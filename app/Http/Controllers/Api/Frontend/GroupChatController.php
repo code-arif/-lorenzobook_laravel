@@ -85,6 +85,27 @@ class GroupChatController extends Controller
 
         $chat->load(['sender:id,first_name,last_name,cover,last_activity_at', 'group:id,name,image_url', 'media']);
 
+        if ($chat->media) {
+            $chat->media->each(function ($media) {
+                $extension = pathinfo(parse_url($media->file, PHP_URL_PATH), PATHINFO_EXTENSION);
+                $extension = strtolower($extension);
+
+                if (in_array($extension, ['jpeg', 'png', 'jpg'])) {
+                    $media->media_type = 'image';
+                } elseif (in_array($extension, ['mp4', 'mov', 'avi', 'wmv'])) {
+                    $media->media_type = 'video';
+                } elseif (in_array($extension, ['pdf', 'doc', 'docx', 'zip', 'txt'])) {
+                    $media->media_type = 'file';
+                } elseif (in_array($extension, ['mp3', 'wav', 'ogg', 'm4a', 'webm', 'aac', 'amr'])) {
+                    $media->media_type = 'voice';
+                } elseif ($extension === 'gif') {
+                    $media->media_type = 'gif';
+                } else {
+                    $media->media_type = 'unknown';
+                }
+            });
+        }
+
         broadcast(new GroupMessageSentEvent($chat))->toOthers();
 
         return response()->json([
@@ -110,6 +131,29 @@ class GroupChatController extends Controller
             ->with(['sender:id,first_name,last_name,cover,last_activity_at', 'media'])
             ->latest()
             ->paginate($request->integer('per_page', 30));
+
+        $messages->getCollection()->each(function ($message) {
+            if ($message->media) {
+                $message->media->each(function ($media) {
+                    $extension = pathinfo(parse_url($media->file, PHP_URL_PATH), PATHINFO_EXTENSION);
+                    $extension = strtolower($extension);
+
+                    if (in_array($extension, ['jpeg', 'png', 'jpg'])) {
+                        $media->media_type = 'image';
+                    } elseif (in_array($extension, ['mp4', 'mov', 'avi', 'wmv'])) {
+                        $media->media_type = 'video';
+                    } elseif (in_array($extension, ['pdf', 'doc', 'docx', 'zip', 'txt'])) {
+                        $media->media_type = 'file';
+                    } elseif (in_array($extension, ['mp3', 'wav', 'ogg', 'm4a', 'webm', 'aac', 'amr'])) {
+                        $media->media_type = 'voice';
+                    } elseif ($extension === 'gif') {
+                        $media->media_type = 'gif';
+                    } else {
+                        $media->media_type = 'unknown';
+                    }
+                });
+            }
+        });
 
         // Mark messages as read
         Chat::where('group_id', $group_id)
